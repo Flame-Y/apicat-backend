@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Inject, Res, Header } from '@nestjs/common';
+import { Controller, Post, Body, Inject, Res, Header, ValidationPipe } from '@nestjs/common';
 import { UserService } from './user.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -12,7 +12,7 @@ export class UserController {
 
     @Post('login')
     @Header('token', 'token')
-    async login(@Body() user: LoginDto, @Res({ passthrough: true }) res: Response) {
+    async login(@Body(ValidationPipe) user: LoginDto, @Res({ passthrough: true }) res: Response) {
         const foundUser = await this.userService.login(user);
 
         if (foundUser) {
@@ -30,7 +30,7 @@ export class UserController {
     }
 
     @Post('register')
-    async register(@Body() user: RegisterDto) {
+    async register(@Body(ValidationPipe) user: RegisterDto) {
         console.log(user);
         return await this.userService.register(user);
     }
