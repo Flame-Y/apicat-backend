@@ -1,6 +1,6 @@
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { HttpException, Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -24,10 +24,10 @@ export class UserService {
         });
 
         if (!foundUser) {
-            throw new HttpException('用户不存在', 200);
+            throw new HttpException('用户不存在', HttpStatus.OK);
         }
         if (foundUser.password !== md5(user.password)) {
-            throw new HttpException('密码错误', 200);
+            throw new HttpException('密码错误', HttpStatus.OK);
         }
         return foundUser;
     }
@@ -38,7 +38,7 @@ export class UserService {
         });
 
         if (foundUser) {
-            throw new HttpException('用户已存在', 200);
+            throw new HttpException('用户已存在', HttpStatus.BAD_REQUEST);
         }
 
         const newUser = new User();
