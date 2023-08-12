@@ -1,28 +1,33 @@
 import { Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { User } from './user/entities/user.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forRoot({
-            type: 'mysql',
-            host: 'localhost',
-            port: 3306,
-            username: 'root', //数据库用户名配置
-            password: '114514', //数据库密码配置
-            database: 'apicat', //数据库名字配置
-            synchronize: true,
-            logging: true,
-            entities: [User],
-            poolSize: 10,
-            connectorPackage: 'mysql2',
-            extra: {
-                authPlugin: 'sha256_password'
-            }
+        TypeOrmModule.forRootAsync({
+            useFactory: (ConfigService: ConfigService) => ({
+                type: 'mysql',
+                host: ConfigService.get('mysql_server_host'),
+                port: ConfigService.get('mysql_server_port'),
+                username: ConfigService.get('mysql_server_username'), //数据库用户名配置
+                password: ConfigService.get('mysql_server_password'), //数据库密码配置
+                database: ConfigService.get('mysql_server_database'), //数据库名字配置
+                synchronize: true,
+                logging: true,
+                entities: [User],
+                poolSize: 10,
+                connectorPackage: 'mysql2',
+                extra: {
+                    authPlugin: 'sha256_password'
+                }
+            }),
+            inject: [ConfigService]
         }),
         JwtModule.register({
             global: true,
@@ -31,7 +36,8 @@ import { User } from './user/entities/user.entity';
                 expiresIn: '7d' // token 过期时间
             }
         }),
-        UserModule
+        UserModule,
+        ConfigModule.forRoot({ isGlobal: true, envFilePath: 'src/.env' })
     ],
     controllers: [AppController],
     providers: [AppService]
