@@ -1,32 +1,28 @@
-import { Project } from 'src/project/entities/project.entity';
 import {
     Column,
     CreateDateColumn,
     Entity,
     JoinTable,
     ManyToMany,
+    OneToMany,
     PrimaryGeneratedColumn,
     UpdateDateColumn
 } from 'typeorm';
+import { Role } from './role.entity';
+import { User } from 'src/user/entities/user.entity';
 
 @Entity({
-    name: 'users'
+    name: 'project'
 })
-export class User {
+export class Project {
     @PrimaryGeneratedColumn()
     id: number;
 
     @Column({
-        length: 10,
-        comment: '用户名'
-    })
-    username: string;
-
-    @Column({
         length: 20,
-        comment: '密码'
+        comment: '项目名'
     })
-    password: string;
+    name: string;
 
     @CreateDateColumn({
         comment: '创建时间'
@@ -38,10 +34,14 @@ export class User {
     })
     updateTime: Date;
 
-    // 多个用户与多个项目关联
-    @ManyToMany(() => Project, (project) => project.users)
+    // 多个项目与多个角色关联
+    @ManyToMany(() => Role)
     @JoinTable({
-        name: 'user_project'
+        name: 'project_role'
     })
-    project: Project[];
+    roles: Role[];
+
+    // 每个项目与多个用户关联
+    @OneToMany(() => User, (user) => user.project)
+    users: User[];
 }

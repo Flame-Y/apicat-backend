@@ -19,16 +19,17 @@ export class UserService {
     @InjectRepository(User)
     private userRepository: Repository<User>;
     async login(user: LoginDto) {
-        const foundUser = await this.userRepository.findOneBy({
+        const foundUser: User = await this.userRepository.findOneBy({
             username: user.username
         });
 
         if (!foundUser) {
-            throw new HttpException('用户不存在', HttpStatus.OK);
+            throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
         }
         if (foundUser.password !== md5(user.password)) {
-            throw new HttpException('密码错误', HttpStatus.OK);
+            throw new HttpException('密码错误', HttpStatus.BAD_REQUEST);
         }
+
         return foundUser;
     }
 
@@ -52,5 +53,18 @@ export class UserService {
             this.logger.error(e, UserService);
             return '注册失败';
         }
+    }
+    async findUserById(userId: number) {
+        const user = await this.userRepository.findOne({
+            where: {
+                id: userId
+            },
+            relations: ['roles', 'roles.permissions']
+        });
+
+        return {
+            id: user.id,
+            username: user.username
+        };
     }
 }

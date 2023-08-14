@@ -7,6 +7,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { User } from './user/entities/user.entity';
+import { ProjectModule } from './project/project.module';
+import { Project } from './project/entities/project.entity';
+import { Permission } from './project/entities/permission.entity';
+import { Role } from './project/entities/role.entity';
 
 @Module({
     imports: [
@@ -20,7 +24,7 @@ import { User } from './user/entities/user.entity';
                 database: ConfigService.get('mysql_server_database'), //数据库名字配置
                 synchronize: true,
                 logging: true,
-                entities: [User],
+                entities: [User, Project, Permission, Role],
                 poolSize: 10,
                 connectorPackage: 'mysql2',
                 extra: {
@@ -37,7 +41,8 @@ import { User } from './user/entities/user.entity';
             }
         }),
         UserModule,
-        ConfigModule.forRoot({ isGlobal: true, envFilePath: 'src/.env' })
+        ConfigModule.forRoot({ isGlobal: true, envFilePath: 'src/.env' }),
+        ProjectModule
     ],
     controllers: [AppController],
     providers: [AppService]
