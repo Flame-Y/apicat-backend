@@ -1,15 +1,20 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { LoginGuard } from 'src/login.guard';
+import { User } from 'src/user/entities/user.entity';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('project')
 export class ProjectController {
     constructor(private readonly projectService: ProjectService) {}
 
     @Post()
-    create(@Body() createProjectDto: CreateProjectDto) {
-        return this.projectService.create(createProjectDto);
+    @UseGuards(LoginGuard)
+    @ApiBearerAuth()
+    create(@Body() createProjectDto: CreateProjectDto, @Req() req: any) {
+        return this.projectService.create(createProjectDto, req.user as User);
     }
 
     @Get()

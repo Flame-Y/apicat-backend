@@ -14,6 +14,7 @@ async function bootstrap() {
         .setDescription('API Cat API 接口文档')
         .setVersion('1.0')
         .addTag('API Cat')
+        .addBearerAuth()
         .build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api-docs', app, document);
