@@ -1,6 +1,4 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { Role } from './role.entity';
-import { User } from 'src/user/entities/user.entity';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity({
     name: 'project'
@@ -24,12 +22,4 @@ export class Project {
         comment: '更新时间'
     })
     updateTime: Date;
-
-    // 每个项目与多个角色关联
-    @OneToMany(() => Role, (role) => role.project)
-    roles: Role[];
-
-    // 每个项目与多个用户关联
-    @OneToMany(() => User, (user) => user.project)
-    users: User[];
 }

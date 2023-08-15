@@ -3,11 +3,9 @@ import { ProjectService } from './project.service';
 import { ProjectController } from './project.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Project } from './entities/project.entity';
-import { Permission } from './entities/permission.entity';
-import { Role } from './entities/role.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Project, Permission, Role])],
+    imports: [TypeOrmModule.forFeature([Project])],
 
     controllers: [ProjectController],
     providers: [ProjectService]

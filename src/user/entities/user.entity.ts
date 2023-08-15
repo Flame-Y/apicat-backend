@@ -1,13 +1,4 @@
-import { Project } from 'src/project/entities/project.entity';
-import {
-    Column,
-    CreateDateColumn,
-    Entity,
-    JoinTable,
-    ManyToMany,
-    PrimaryGeneratedColumn,
-    UpdateDateColumn
-} from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity({
     name: 'user'
@@ -37,11 +28,4 @@ export class User {
         comment: '更新时间'
     })
     updateTime: Date;
-
-    // 多个用户与多个项目关联
-    @ManyToMany(() => Project, (project) => project.users)
-    @JoinTable({
-        name: 'user_project'
-    })
-    project: Project[];
 }

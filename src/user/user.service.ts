@@ -37,7 +37,7 @@ export class UserService {
         vo.userInfo = {
             id: foundUser.id,
             username: foundUser.username,
-            project: foundUser.project?.map((item) => item.name)
+            project: [] // todo：获取用户项目
         };
 
         return vo;
