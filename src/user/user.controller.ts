@@ -1,16 +1,19 @@
-import { Controller, Post, Body, Inject, Res, Header, ValidationPipe, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Inject, Header, ValidationPipe, HttpStatus } from '@nestjs/common';
 import { UserService } from './user.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
-import { Response } from 'express';
 import { ApiTags, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 @ApiTags('用户管理模块')
 @Controller('user')
 export class UserController {
     constructor(private readonly userService: UserService) {}
     @Inject(JwtService)
     private jwtService: JwtService;
+
+    @Inject(ConfigService)
+    private configService: ConfigService;
 
     @ApiBody({ type: RegisterDto })
     @ApiResponse({
@@ -44,20 +47,18 @@ export class UserController {
     })
     @Post('login')
     @Header('token', 'token')
-    async login(@Body(ValidationPipe) user: LoginDto, @Res({ passthrough: true }) res: Response) {
-        const foundUser = await this.userService.login(user);
-
-        if (foundUser) {
-            const token = await this.jwtService.signAsync({
-                user: {
-                    id: foundUser.id,
-                    username: foundUser.username
-                }
-            });
-            res.setHeader('token', token);
-            return 'login success';
-        } else {
-            return 'login fail';
-        }
+    async login(@Body(ValidationPipe) user: LoginDto) {
+        const vo = await this.userService.login(user);
+        vo.accessToken = this.jwtService.sign(
+            {
+                userId: vo.userInfo.id,
+                username: vo.userInfo.username,
+                project: vo.userInfo.project
+            },
+            {
+                expiresIn: this.configService.get('jwt_access_token_expires_time') || '3d'
+            }
+        );
+        return vo;
     }
 }

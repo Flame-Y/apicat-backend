@@ -1,13 +1,4 @@
-import {
-    Column,
-    CreateDateColumn,
-    Entity,
-    JoinTable,
-    ManyToMany,
-    OneToMany,
-    PrimaryGeneratedColumn,
-    UpdateDateColumn
-} from 'typeorm';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Role } from './role.entity';
 import { User } from 'src/user/entities/user.entity';
 
@@ -34,11 +25,8 @@ export class Project {
     })
     updateTime: Date;
 
-    // 多个项目与多个角色关联
-    @ManyToMany(() => Role)
-    @JoinTable({
-        name: 'project_role'
-    })
+    // 每个项目与多个角色关联
+    @OneToMany(() => Role, (role) => role.project)
     roles: Role[];
 
     // 每个项目与多个用户关联

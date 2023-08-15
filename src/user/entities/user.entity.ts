@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 
 @Entity({
-    name: 'users'
+    name: 'user'
 })
 export class User {
     @PrimaryGeneratedColumn()
@@ -23,7 +23,7 @@ export class User {
     username: string;
 
     @Column({
-        length: 20,
+        length: 100,
         comment: '密码'
     })
     password: string;
