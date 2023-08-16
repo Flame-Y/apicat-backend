@@ -5,13 +5,15 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { LoginGuard } from 'src/login.guard';
 import { User } from 'src/user/entities/user.entity';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { RequireLogin } from 'src/custom.decorator';
 
 @Controller('project')
 export class ProjectController {
     constructor(private readonly projectService: ProjectService) {}
 
     @Post()
-    @UseGuards(LoginGuard)
+    // @UseGuards(LoginGuard)
+    @RequireLogin()
     @ApiBearerAuth()
     create(@Body() createProjectDto: CreateProjectDto, @Req() req: any) {
         return this.projectService.create(createProjectDto, req.user as User);
@@ -20,6 +22,12 @@ export class ProjectController {
     @Get()
     findAll() {
         return this.projectService.findAll();
+    }
+    @Get()
+    @RequireLogin()
+    @ApiBearerAuth()
+    findByUser(@Req() req: any) {
+        return this.projectService.findByUser(req.user as User);
     }
 
     @Get(':id')
