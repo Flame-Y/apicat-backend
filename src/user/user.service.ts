@@ -32,7 +32,6 @@ export class UserService {
             throw new HttpException('密码错误', HttpStatus.BAD_REQUEST);
         }
         const vo = new LoginUserVo();
-        console.log(foundUser);
 
         vo.userInfo = {
             id: foundUser.id,

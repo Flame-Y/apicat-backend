@@ -1,6 +1,6 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
-import { LoginGuard } from './login.guard';
+import { RequireLogin } from './custom.decorator';
 import { ApiTags } from '@nestjs/swagger';
 @ApiTags('测试接口')
 @Controller()
@@ -13,13 +13,12 @@ export class AppController {
     }
 
     @Get('aaa')
-    @UseGuards(LoginGuard)
+    @RequireLogin()
     aaa() {
         return 'aaa';
     }
 
     @Get('bbb')
-    @UseGuards(LoginGuard)
     bbb() {
         return 'bbb';
     }

@@ -11,6 +11,8 @@ import { ProjectModule } from './project/project.module';
 import { Project } from './project/entities/project.entity';
 import { Permission } from './permission/entities/permission.entity';
 import { PermissionModule } from './permission/permission.module';
+import { APP_GUARD } from '@nestjs/core';
+import { LoginGuard } from './login.guard';
 
 @Module({
     imports: [
@@ -46,6 +48,6 @@ import { PermissionModule } from './permission/permission.module';
         PermissionModule
     ],
     controllers: [AppController],
-    providers: [AppService]
+    providers: [AppService, { provide: APP_GUARD, useClass: LoginGuard }]
 })
 export class AppModule {}
