@@ -19,6 +19,13 @@ export class User {
     })
     password: string;
 
+    @Column({
+        length: 1000,
+        comment: '头像',
+        nullable: true
+    })
+    avatar: string;
+
     @CreateDateColumn({
         comment: '创建时间'
     })

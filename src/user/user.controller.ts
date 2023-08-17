@@ -1,10 +1,14 @@
-import { Controller, Post, Body, Inject, Header, ValidationPipe, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Inject, ValidationPipe, HttpStatus, Get } from '@nestjs/common';
 import { UserService } from './user.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
-import { ApiTags, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { RequireLogin, UserInfo } from 'src/custom.decorator';
+import { UserDetailVo } from './vo/user-info.vo';
+import { UpdateUserPasswordDto } from './dto/update-user-password.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 @ApiTags('用户管理模块')
 @Controller('user')
 export class UserController {
@@ -46,7 +50,6 @@ export class UserController {
         type: Object
     })
     @Post('login')
-    @Header('token', 'token')
     async login(@Body(ValidationPipe) user: LoginDto) {
         const vo = await this.userService.login(user);
         vo.accessToken = this.jwtService.sign(
@@ -60,5 +63,60 @@ export class UserController {
             }
         );
         return vo;
+    }
+
+    @ApiBearerAuth()
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: 'success',
+        type: UserDetailVo
+    })
+    @Get('info')
+    @RequireLogin()
+    async info(@UserInfo('userId') userId: number) {
+        const foundUser = await this.userService.findUserDetailById(userId);
+        const vo = new UserDetailVo();
+        vo.id = foundUser.id;
+        vo.username = foundUser.username;
+        vo.createTime = foundUser.createTime;
+        return vo;
+    }
+
+    @ApiBearerAuth()
+    @ApiBody({
+        type: UpdateUserDto
+    })
+    @ApiResponse({
+        status: HttpStatus.BAD_REQUEST,
+        description: '验证码已失效/不正确'
+    })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: '更新成功',
+        type: String
+    })
+    @Post('update')
+    @RequireLogin()
+    async update(@UserInfo('userId') userId: number, @Body() updateUserDto: UpdateUserDto) {
+        return await this.userService.update(userId, updateUserDto);
+    }
+
+    @ApiBearerAuth()
+    @ApiBody({
+        type: UpdateUserPasswordDto
+    })
+    @ApiResponse({
+        status: HttpStatus.BAD_REQUEST,
+        description: '验证码已失效/不正确'
+    })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: '更新成功',
+        type: String
+    })
+    @Post('update_password')
+    @RequireLogin()
+    async updatePassword(@UserInfo('userId') userId: number, @Body() passwordDto: UpdateUserPasswordDto) {
+        return await this.userService.updatePassword(userId, passwordDto);
     }
 }
