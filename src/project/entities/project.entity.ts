@@ -13,6 +13,25 @@ export class Project {
     })
     name: string;
 
+    @Column({
+        length: 100,
+        comment: '创建者id'
+    })
+    creatorId: string;
+
+    @Column({
+        length: 100,
+        comment: '创建者名称'
+    })
+    creatorName: string;
+
+    @Column({
+        length: 1000,
+        comment: '项目描述',
+        nullable: true
+    })
+    description: string;
+
     @CreateDateColumn({
         comment: '创建时间'
     })
