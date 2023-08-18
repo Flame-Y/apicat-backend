@@ -5,7 +5,7 @@ import { Request } from 'express';
 import { Observable } from 'rxjs';
 import { Project } from './project/entities/project.entity';
 
-interface JwtUserData {
+export interface JwtUserData {
     userId: number;
     username: string;
     project: Project[];

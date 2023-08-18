@@ -14,10 +14,9 @@ export class Project {
     name: string;
 
     @Column({
-        length: 100,
         comment: '创建者id'
     })
-    creatorId: string;
+    creatorId: number;
 
     @Column({
         length: 100,

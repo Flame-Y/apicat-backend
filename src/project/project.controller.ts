@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards } fro
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { LoginGuard } from 'src/login.guard';
+import { JwtUserData, LoginGuard } from 'src/login.guard';
 import { User } from 'src/user/entities/user.entity';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { RequireLogin } from 'src/custom.decorator';
@@ -16,7 +16,7 @@ export class ProjectController {
     @RequireLogin()
     @ApiBearerAuth()
     create(@Body() createProjectDto: CreateProjectDto, @Req() req: any) {
-        return this.projectService.create(createProjectDto, req.user as User);
+        return this.projectService.create(createProjectDto, req.user as JwtUserData);
     }
 
     @Get()
@@ -27,7 +27,7 @@ export class ProjectController {
     @RequireLogin()
     @ApiBearerAuth()
     findByUser(@Req() req: any) {
-        return this.projectService.findByUser(req.user as User);
+        return this.projectService.findByUser(req.user as JwtUserData);
     }
 
     @Get(':id')

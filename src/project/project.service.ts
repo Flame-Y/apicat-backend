@@ -7,6 +7,7 @@ import { Project } from './entities/project.entity';
 import { plainToClass } from 'class-transformer';
 import { User } from 'src/user/entities/user.entity';
 import { PermissionService } from 'src/permission/permission.service';
+import { JwtUserData } from 'src/login.guard';
 
 @Injectable()
 export class ProjectService {
@@ -17,12 +18,14 @@ export class ProjectService {
     @InjectRepository(Project)
     private projectRepository: Repository<Project>;
 
-    async create(projectDto: CreateProjectDto, user: User) {
+    async create(projectDto: CreateProjectDto, user: JwtUserData) {
         //需要查询user的project有没有重名,和创建权限,此处先不管
         this.logger.log(user);
         const newProject = plainToClass(Project, projectDto);
         newProject.createTime = new Date();
         newProject.updateTime = new Date();
+        newProject.creatorId = user.userId;
+        newProject.creatorName = user.username;
         try {
             await this.projectRepository.save(newProject);
             return '创建成功';
@@ -41,12 +44,12 @@ export class ProjectService {
             this.logger.error(e);
         }
     }
-    async findByUser(user: User): Promise<Project[]> {
+    async findByUser(user: JwtUserData): Promise<Project[]> {
         try {
-            const permList = await this.permissionService.findByUser(user);
-            const projectIdList = permList.map((e) => e.pid);
-            const projectList: Project[] = await this.projectRepository.findBy({
-                id: In(projectIdList)
+            // const permList = await this.permissionService.findByUser(user);
+            // const projectIdList = permList.map((e) => e.pid);
+            const projectList: Project[] = await this.projectRepository.find({
+                where: { creatorId: user.userId }
             });
             return projectList;
         } catch (e) {
