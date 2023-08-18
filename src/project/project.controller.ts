@@ -1,9 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Req } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
-import { UpdateProjectDto } from './dto/update-project.dto';
-import { JwtUserData, LoginGuard } from 'src/login.guard';
-import { User } from 'src/user/entities/user.entity';
+import { JwtUserData } from 'src/login.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { RequireLogin } from 'src/custom.decorator';
 
@@ -11,37 +9,36 @@ import { RequireLogin } from 'src/custom.decorator';
 export class ProjectController {
     constructor(private readonly projectService: ProjectService) {}
 
-    @Post()
-    // @UseGuards(LoginGuard)
+    @Post('create')
     @RequireLogin()
     @ApiBearerAuth()
     create(@Body() createProjectDto: CreateProjectDto, @Req() req: any) {
         return this.projectService.create(createProjectDto, req.user as JwtUserData);
     }
 
-    @Get()
+    //大概是一个不会用到的接口
+    @Get('getAll')
     findAll() {
         return this.projectService.findAll();
     }
-    @Get()
+
+    @Get('getUserProjectList')
     @RequireLogin()
     @ApiBearerAuth()
     findByUser(@Req() req: any) {
         return this.projectService.findByUser(req.user as JwtUserData);
     }
 
-    @Get(':id')
+    @Get('getProjectDetail/:id')
     findOne(@Param('id') id: string) {
+        //todo: 通过id获取项目详情,包括项目下的所有接口
         return this.projectService.findOne(+id);
     }
 
-    @Patch(':id')
-    update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
-        return this.projectService.update(+id, updateProjectDto);
-    }
-
-    @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.projectService.remove(+id);
+    @ApiBearerAuth()
+    @RequireLogin()
+    @Delete('deleteProject/:id')
+    remove(@Param('id') id: string, @Req() req: any) {
+        return this.projectService.remove(+id, req.user as JwtUserData);
     }
 }

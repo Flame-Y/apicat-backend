@@ -1,11 +1,10 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Project } from './entities/project.entity';
 import { plainToClass } from 'class-transformer';
-import { User } from 'src/user/entities/user.entity';
 import { PermissionService } from 'src/permission/permission.service';
 import { JwtUserData } from 'src/login.guard';
 
@@ -19,7 +18,10 @@ export class ProjectService {
     private projectRepository: Repository<Project>;
 
     async create(projectDto: CreateProjectDto, user: JwtUserData) {
-        //需要查询user的project有没有重名,和创建权限,此处先不管
+        const foundProject = await this.projectRepository.findOneBy({
+            name: projectDto.name
+        });
+        if (foundProject) return '项目已存在';
         this.logger.log(user);
         const newProject = plainToClass(Project, projectDto);
         newProject.createTime = new Date();
@@ -44,6 +46,7 @@ export class ProjectService {
             this.logger.error(e);
         }
     }
+
     async findByUser(user: JwtUserData): Promise<Project[]> {
         try {
             // const permList = await this.permissionService.findByUser(user);
@@ -85,11 +88,14 @@ export class ProjectService {
         }
     }
 
-    async remove(id: number): Promise<string> {
+    async remove(id: number, user: JwtUserData): Promise<string> {
         try {
             const project: Project = await this.projectRepository.findOneBy({
                 id: id
             });
+            if (!project) return '项目不存在';
+            //查询用户是否有删除权限
+            if (project.creatorId !== user.userId) return '没有删除权限';
             this.projectRepository.remove(project);
             return '删除成功';
         } catch (e) {
