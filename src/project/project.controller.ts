@@ -1,14 +1,26 @@
-import { Controller, Get, Post, Body, Param, Delete, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Req, HttpStatus } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { JwtUserData } from 'src/login.guard';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { RequireLogin } from 'src/custom.decorator';
+import { ProjectInfoVo } from './vo/project-info.vo';
 
+@ApiTags('项目管理模块')
 @Controller('project')
 export class ProjectController {
     constructor(private readonly projectService: ProjectService) {}
 
+    @ApiResponse({
+        status: HttpStatus.BAD_REQUEST,
+        description: '项目已存在',
+        type: String
+    })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: '创建成功/失败',
+        type: String
+    })
     @Post('create')
     @RequireLogin()
     @ApiBearerAuth()
@@ -22,6 +34,16 @@ export class ProjectController {
         return this.projectService.findAll();
     }
 
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: 'success',
+        type: [ProjectInfoVo]
+    })
+    @ApiResponse({
+        status: HttpStatus.UNAUTHORIZED,
+        description: '用户未登录',
+        type: String
+    })
     @Get('getUserProjectList')
     @RequireLogin()
     @ApiBearerAuth()
@@ -29,12 +51,44 @@ export class ProjectController {
         return this.projectService.findByUser(req.user as JwtUserData);
     }
 
+    @ApiResponse({
+        status: HttpStatus.BAD_REQUEST,
+        description: '项目不存在',
+        type: String
+    })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: 'success',
+        type: ProjectInfoVo
+    })
+    @ApiResponse({
+        status: HttpStatus.UNAUTHORIZED,
+        description: '用户未登录',
+        type: String
+    })
+    @ApiBearerAuth()
+    @RequireLogin()
     @Get('getProjectDetail/:id')
     findOne(@Param('id') id: string) {
         //todo: 通过id获取项目详情,包括项目下的所有接口
         return this.projectService.findOne(+id);
     }
 
+    @ApiResponse({
+        status: HttpStatus.BAD_REQUEST,
+        description: '项目不存在',
+        type: String
+    })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: '删除成功/失败',
+        type: String
+    })
+    @ApiResponse({
+        status: HttpStatus.UNAUTHORIZED,
+        description: '用户未登录/没有删除权限',
+        type: String
+    })
     @ApiBearerAuth()
     @RequireLogin()
     @Delete('deleteProject/:id')

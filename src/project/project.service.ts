@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -21,7 +21,7 @@ export class ProjectService {
         const foundProject = await this.projectRepository.findOneBy({
             name: projectDto.name
         });
-        if (foundProject) return '项目已存在';
+        if (foundProject) throw new HttpException('项目已存在', HttpStatus.BAD_REQUEST);
         this.logger.log(user);
         const newProject = plainToClass(Project, projectDto);
         newProject.createTime = new Date();
@@ -65,6 +65,7 @@ export class ProjectService {
             const project: Project = await this.projectRepository.findOneBy({
                 id: id
             });
+            if (!project) throw new HttpException('项目不存在', HttpStatus.BAD_REQUEST);
             return project;
         } catch (e) {
             this.logger.error(e);
@@ -93,9 +94,9 @@ export class ProjectService {
             const project: Project = await this.projectRepository.findOneBy({
                 id: id
             });
-            if (!project) return '项目不存在';
+            if (!project) throw new HttpException('项目不存在', HttpStatus.BAD_REQUEST);
             //查询用户是否有删除权限
-            if (project.creatorId !== user.userId) return '没有删除权限';
+            if (project.creatorId !== user.userId) throw new HttpException('没有删除权限', HttpStatus.UNAUTHORIZED);
             this.projectRepository.remove(project);
             return '删除成功';
         } catch (e) {
