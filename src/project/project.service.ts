@@ -2,13 +2,14 @@ import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Project } from './entities/project.entity';
 import { plainToClass } from 'class-transformer';
 import { PermissionService } from 'src/permission/permission.service';
 import { JwtUserData } from 'src/login.guard';
 import { Permission } from 'src/permission/entities/permission.entity';
 import { UserService } from 'src/user/user.service';
+import { ProjectListVo } from './vo/project-list.vo';
 
 @Injectable()
 export class ProjectService {
@@ -23,11 +24,6 @@ export class ProjectService {
     private projectRepository: Repository<Project>;
 
     async create(projectDto: CreateProjectDto, user: JwtUserData) {
-        const foundProject = await this.projectRepository.findOneBy({
-            name: projectDto.name
-        });
-        if (foundProject) throw new HttpException('项目已存在', HttpStatus.BAD_REQUEST);
-        this.logger.log(user);
         const newProject = plainToClass(Project, projectDto);
         newProject.createTime = new Date();
         newProject.updateTime = new Date();
@@ -58,14 +54,25 @@ export class ProjectService {
         }
     }
 
-    async findByUser(user: JwtUserData): Promise<Project[]> {
+    async findByUser(user: JwtUserData): Promise<ProjectListVo[]> {
         try {
-            // const permList = await this.permissionService.findByUser(user);
-            // const projectIdList = permList.map((e) => e.pid);
-            const projectList: Project[] = await this.projectRepository.find({
-                where: { creatorId: user.userId }
+            const permList = await this.permissionService.findByUser(user.userId);
+            const projectIdList = permList.map((e) => e.pid);
+            const projectList: Project[] = await this.projectRepository.findBy({
+                id: In(projectIdList)
             });
-            return projectList;
+            // 将Project[]转换为ProjectListVo[]并加入权限信息
+            const projectListVo: ProjectListVo[] = projectList.map((e) => {
+                // 去除creatorId、creatorName、description
+                delete e.creatorId;
+                delete e.creatorName;
+                delete e.description;
+                const vo = plainToClass(ProjectListVo, e);
+                const perm = permList.find((p) => p.pid === e.id);
+                vo.permission = perm.type;
+                return vo;
+            });
+            return projectListVo;
         } catch (e) {
             this.logger.error(e);
         }
@@ -101,14 +108,20 @@ export class ProjectService {
     }
 
     async remove(id: number, user: JwtUserData): Promise<string> {
+        const project: Project = await this.projectRepository.findOneBy({
+            id: id
+        });
+        if (!project) throw new HttpException('项目不存在', HttpStatus.BAD_REQUEST);
+        //查询用户是否有删除权限
+        if (project.creatorId !== user.userId) throw new HttpException('没有删除权限', HttpStatus.UNAUTHORIZED);
+
         try {
-            const project: Project = await this.projectRepository.findOneBy({
-                id: id
-            });
-            if (!project) throw new HttpException('项目不存在', HttpStatus.BAD_REQUEST);
-            //查询用户是否有删除权限
-            if (project.creatorId !== user.userId) throw new HttpException('没有删除权限', HttpStatus.UNAUTHORIZED);
             this.projectRepository.remove(project);
+            // 删除权限表中的记录
+            const perms = await this.permissionService.findByPid(id);
+            perms.forEach(async (perm) => {
+                await this.permissionService.delete(perm);
+            });
             return '删除成功';
         } catch (e) {
             this.logger.error(e);
@@ -134,7 +147,7 @@ export class ProjectService {
         if (foundPermission) {
             foundPermission.type = type;
             await this.permissionService.update(foundPermission);
-            return '分配权限成功';
+            throw new HttpException('更新权限成功', HttpStatus.OK);
         }
         try {
             const permission = new Permission();

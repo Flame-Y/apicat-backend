@@ -6,6 +6,7 @@ import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { RequireLogin } from 'src/custom.decorator';
 import { ProjectInfoVo } from './vo/project-info.vo';
 import { AssginPermissionDto } from './dto/assign-permission.dto';
+import { ProjectListVo } from './vo/project-list.vo';
 
 @ApiTags('项目管理模块')
 @Controller('project')
@@ -18,7 +19,7 @@ export class ProjectController {
         type: String
     })
     @ApiResponse({
-        status: HttpStatus.OK,
+        status: HttpStatus.CREATED,
         description: '创建成功/失败',
         type: String
     })
@@ -38,7 +39,7 @@ export class ProjectController {
     @ApiResponse({
         status: HttpStatus.OK,
         description: 'success',
-        type: [ProjectInfoVo]
+        type: [ProjectListVo]
     })
     @ApiResponse({
         status: HttpStatus.UNAUTHORIZED,
@@ -103,8 +104,13 @@ export class ProjectController {
         type: String
     })
     @ApiResponse({
-        status: HttpStatus.OK,
+        status: HttpStatus.CREATED,
         description: '分配权限成功/失败',
+        type: String
+    })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: '更新权限成功',
         type: String
     })
     @ApiResponse({
