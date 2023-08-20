@@ -4,9 +4,10 @@ import { ProjectController } from './project.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Project } from './entities/project.entity';
 import { PermissionModule } from 'src/permission/permission.module';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Project]), PermissionModule],
+    imports: [TypeOrmModule.forFeature([Project]), PermissionModule, UserModule],
 
     controllers: [ProjectController],
     providers: [ProjectService]

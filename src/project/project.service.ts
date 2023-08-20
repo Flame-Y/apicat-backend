@@ -7,10 +7,15 @@ import { Project } from './entities/project.entity';
 import { plainToClass } from 'class-transformer';
 import { PermissionService } from 'src/permission/permission.service';
 import { JwtUserData } from 'src/login.guard';
+import { Permission } from 'src/permission/entities/permission.entity';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class ProjectService {
-    constructor(private readonly permissionService: PermissionService) {}
+    constructor(
+        private readonly permissionService: PermissionService,
+        private readonly userService: UserService
+    ) {}
 
     private logger = new Logger();
 
@@ -30,6 +35,12 @@ export class ProjectService {
         newProject.creatorName = user.username;
         try {
             await this.projectRepository.save(newProject);
+            //在permission表中添加记录
+            const permission = new Permission();
+            permission.pid = newProject.id;
+            permission.uid = user.userId;
+            permission.type = 'admin';
+            await this.permissionService.create(permission);
             return '创建成功';
         } catch (e) {
             this.logger.error(e, ProjectService);
@@ -102,6 +113,39 @@ export class ProjectService {
         } catch (e) {
             this.logger.error(e);
             return '删除失败';
+        }
+    }
+
+    // 分配权限
+    async assignPermission(pid: number, uid: number, type: string, user: JwtUserData): Promise<string> {
+        const project: Project = await this.projectRepository.findOneBy({
+            id: pid
+        });
+        //查询用户是否存在
+        const foundUser = await this.userService.findUserDetailById(uid);
+        if (!foundUser) throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
+        if (!['admin', 'r', 'rw'].includes(type)) throw new HttpException('权限类型错误', HttpStatus.BAD_REQUEST);
+        if (!project) throw new HttpException('项目不存在', HttpStatus.BAD_REQUEST);
+        if (project.creatorId !== user.userId) throw new HttpException('没有分配权限', HttpStatus.UNAUTHORIZED);
+        if (project.creatorId === uid) throw new HttpException('不能分配给自己', HttpStatus.BAD_REQUEST);
+        // 查询是否已经分配过权限
+        const foundPermission = await this.permissionService.findByPidAndUid(pid, uid);
+        // 如果已经分配过权限，则更新权限
+        if (foundPermission) {
+            foundPermission.type = type;
+            await this.permissionService.update(foundPermission);
+            return '分配权限成功';
+        }
+        try {
+            const permission = new Permission();
+            permission.pid = pid;
+            permission.uid = uid;
+            permission.type = type;
+            await this.permissionService.create(permission);
+            return '分配权限成功';
+        } catch (e) {
+            this.logger.error(e);
+            return '分配权限失败';
         }
     }
 }
