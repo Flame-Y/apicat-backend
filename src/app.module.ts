@@ -13,6 +13,8 @@ import { Permission } from './permission/entities/permission.entity';
 import { PermissionModule } from './permission/permission.module';
 import { APP_GUARD } from '@nestjs/core';
 import { LoginGuard } from './login.guard';
+import { ApiModule } from './api/api.module';
+import { Api } from './api/entities/api.entity';
 
 @Module({
     imports: [
@@ -26,7 +28,7 @@ import { LoginGuard } from './login.guard';
                 database: ConfigService.get('mysql_server_database'), //数据库名字配置
                 synchronize: true,
                 logging: true,
-                entities: [User, Project, Permission],
+                entities: [User, Project, Permission, Api],
                 poolSize: 10,
                 connectorPackage: 'mysql2',
                 extra: {
@@ -45,7 +47,8 @@ import { LoginGuard } from './login.guard';
         UserModule,
         ConfigModule.forRoot({ isGlobal: true, envFilePath: 'src/.env' }),
         ProjectModule,
-        PermissionModule
+        PermissionModule,
+        ApiModule
     ],
     controllers: [AppController],
     providers: [AppService, { provide: APP_GUARD, useClass: LoginGuard }]
