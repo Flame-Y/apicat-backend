@@ -1,4 +1,23 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateApiDto } from './create-api.dto';
+import { IsString, Length } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+export class UpdateApiDto {
+    @IsString()
+    @ApiProperty()
+    @Length(1, 20)
+    name: string;
 
-export class UpdateApiDto extends PartialType(CreateApiDto) {}
+    @IsString()
+    @ApiProperty()
+    description: string;
+
+    @IsString()
+    @ApiProperty()
+    type: string;
+
+    @IsString()
+    @ApiProperty()
+    url: string;
+
+    @ApiProperty()
+    pid: number;
+}

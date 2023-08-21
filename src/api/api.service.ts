@@ -29,8 +29,9 @@ export class ApiService {
         const foundPermission = await this.permissionService.findByPidAndUid(createApiDto.pid, user.userId);
         if (!foundPermission) {
             throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
+        } else if (foundPermission.type === 'r') {
+            throw new HttpException('用户权限不足', HttpStatus.BAD_REQUEST);
         }
-        console.log(foundPermission);
 
         try {
             const api = new Api();
@@ -55,11 +56,43 @@ export class ApiService {
         return `This action returns a #${id} api`;
     }
 
-    update(id: number, updateApiDto: UpdateApiDto) {
-        return `This action updates a #${id} api`;
+    async update(id: number, updateApiDto: UpdateApiDto, pid: number, user: JwtUserData) {
+        // 查看用户是否有权限
+        const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
+        if (!foundPermission) {
+            throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
+        } else if (foundPermission.type === 'r') {
+            throw new HttpException('用户权限不足', HttpStatus.BAD_REQUEST);
+        }
+        const foundApi = await this.apiRepository.findOneBy({ id: id });
+        if (updateApiDto.name) foundApi.name = updateApiDto.name;
+        if (updateApiDto.description) foundApi.description = updateApiDto.description;
+        if (updateApiDto.type) foundApi.type = updateApiDto.type;
+        if (updateApiDto.url) foundApi.url = updateApiDto.url;
+        try {
+            await this.apiRepository.save(foundApi);
+            return '更新成功';
+        } catch (e) {
+            this.logger.log(e);
+            return '更新失败';
+        }
     }
 
-    remove(id: number) {
-        return `This action removes a #${id} api`;
+    async remove(id: number, pid: number, user: JwtUserData) {
+        // 查看用户是否有权限
+        const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
+        if (!foundPermission) {
+            throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
+        } else if (foundPermission.type === 'r') {
+            throw new HttpException('用户权限不足', HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            await this.apiRepository.delete(id);
+            return '删除成功';
+        } catch (e) {
+            this.logger.log(e);
+            return '删除失败';
+        }
     }
 }
