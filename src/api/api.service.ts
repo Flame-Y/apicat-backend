@@ -7,7 +7,7 @@ import { Api } from './entities/api.entity';
 import { ProjectService } from 'src/project/project.service';
 import { PermissionService } from 'src/permission/permission.service';
 import { JwtUserData } from 'src/login.guard';
-
+import * as fs from 'fs';
 @Injectable()
 export class ApiService {
     constructor(
@@ -56,6 +56,16 @@ export class ApiService {
         return `This action returns a #${id} api`;
     }
 
+    async findByProject(pid: number, user: JwtUserData) {
+        // 查看用户是否有权限
+        const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
+        if (!foundPermission) {
+            throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
+        }
+        const apiList = await this.apiRepository.findBy({ pid: pid });
+        return apiList;
+    }
+
     async update(id: number, updateApiDto: UpdateApiDto, pid: number, user: JwtUserData) {
         // 查看用户是否有权限
         const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
@@ -93,6 +103,46 @@ export class ApiService {
         } catch (e) {
             this.logger.log(e);
             return '删除失败';
+        }
+    }
+    // 导入swagger文档接口
+    async importApiBySwaggerFile(pid: number, user: JwtUserData, swaggerFile: any) {
+        // 查看用户是否有权限
+        const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
+        if (!foundPermission) {
+            throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
+        } else if (foundPermission.type === 'r') {
+            throw new HttpException('用户权限不足', HttpStatus.BAD_REQUEST);
+        }
+        try {
+            // 读取swagger文件
+            const filePath = swaggerFile[0].path;
+            const fileContent = fs.readFileSync(filePath, 'utf-8');
+            const swaggerJson = JSON.parse(fileContent);
+
+            // 读取swagger文件中的接口信息
+            const apiList = [];
+            for (const url in swaggerJson.paths) {
+                const api = new Api();
+                api.name = swaggerJson.paths[url].summary ? swaggerJson.paths[url].summary : url;
+                api.description = swaggerJson.paths[url].description ? swaggerJson.paths[url].description : '';
+                // todo: 解析swagger文件中的response
+                api.type = Object.keys(swaggerJson.paths[url])[0];
+                api.url = url;
+                api.pid = pid;
+                apiList.push(api);
+            }
+            //todo: 同名接口处理
+            //todo: 与schema关联
+
+            // 将接口信息保存到数据库
+            await this.apiRepository.save(apiList);
+            // 删除swagger文件
+            fs.unlinkSync(filePath);
+            return '导入成功';
+        } catch (e) {
+            this.logger.log(e);
+            return '导入失败';
         }
     }
 }
