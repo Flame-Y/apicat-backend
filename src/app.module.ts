@@ -15,6 +15,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { LoginGuard } from './login.guard';
 import { ApiModule } from './api/api.module';
 import { Api } from './api/entities/api.entity';
+import { ApiArgsModule } from './api-args/api-args.module';
+import { ApiResponseModule } from './api-response/api-response.module';
 
 @Module({
     imports: [
@@ -48,7 +50,9 @@ import { Api } from './api/entities/api.entity';
         ConfigModule.forRoot({ isGlobal: true, envFilePath: 'src/.env' }),
         ProjectModule,
         PermissionModule,
-        ApiModule
+        ApiModule,
+        ApiArgsModule,
+        ApiResponseModule
     ],
     controllers: [AppController],
     providers: [AppService, { provide: APP_GUARD, useClass: LoginGuard }]

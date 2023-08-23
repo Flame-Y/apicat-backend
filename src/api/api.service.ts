@@ -66,6 +66,14 @@ export class ApiService {
         return apiList;
     }
 
+    async findApiDetail(id: number, user: JwtUserData) {
+        const foundPermission = await this.permissionService.findByPidAndUid(id, user.userId);
+        if (!foundPermission) {
+            throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
+        }
+        const foundApi = await this.apiRepository.findOneBy({ id: id });
+        return foundApi;
+    }
     async update(id: number, updateApiDto: UpdateApiDto, pid: number, user: JwtUserData) {
         // 查看用户是否有权限
         const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
