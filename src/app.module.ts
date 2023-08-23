@@ -17,6 +17,7 @@ import { ApiModule } from './api/api.module';
 import { Api } from './api/entities/api.entity';
 import { ApiArgsModule } from './api-args/api-args.module';
 import { ApiResponseModule } from './api-response/api-response.module';
+import { ApiArg } from './api-args/entities/api-arg.entity';
 
 @Module({
     imports: [
@@ -30,7 +31,7 @@ import { ApiResponseModule } from './api-response/api-response.module';
                 database: ConfigService.get('mysql_server_database'), //数据库名字配置
                 synchronize: true,
                 logging: true,
-                entities: [User, Project, Permission, Api],
+                entities: [User, Project, Permission, Api, ApiArg],
                 poolSize: 10,
                 connectorPackage: 'mysql2',
                 extra: {

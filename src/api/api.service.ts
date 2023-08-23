@@ -6,13 +6,16 @@ import { Repository } from 'typeorm';
 import { Api } from './entities/api.entity';
 import { ProjectService } from 'src/project/project.service';
 import { PermissionService } from 'src/permission/permission.service';
+import { ApiArgsService } from 'src/api-args/api-args.service';
 import { JwtUserData } from 'src/login.guard';
 import * as fs from 'fs';
+import { ApiInfoVo } from './vo/api-info.vo';
 @Injectable()
 export class ApiService {
     constructor(
         private readonly projectService: ProjectService,
-        private readonly permissionService: PermissionService
+        private readonly permissionService: PermissionService,
+        private readonly apiArgService: ApiArgsService
     ) {}
     private logger = new Logger();
     @InjectRepository(Api)
@@ -66,13 +69,18 @@ export class ApiService {
         return apiList;
     }
 
-    async findApiDetail(id: number, user: JwtUserData) {
-        const foundPermission = await this.permissionService.findByPidAndUid(id, user.userId);
+    async findApiDetail(id: number, pid: number, user: JwtUserData): Promise<ApiInfoVo> {
+        const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
         if (!foundPermission) {
             throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
         }
         const foundApi = await this.apiRepository.findOneBy({ id: id });
-        return foundApi;
+        const foundApiArgs = await this.apiArgService.findByApiId(id);
+        const apiInfoVo = new ApiInfoVo();
+        apiInfoVo.apiInfo = foundApi;
+        apiInfoVo.apiArgs = foundApiArgs;
+        // apiInfoVo.apiArgs = [];
+        return apiInfoVo;
     }
     async update(id: number, updateApiDto: UpdateApiDto, pid: number, user: JwtUserData) {
         // 查看用户是否有权限

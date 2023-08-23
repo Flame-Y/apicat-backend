@@ -41,11 +41,11 @@ export class ApiController {
         return this.apiService.remove(+id, +pid, req.user as JwtUserData);
     }
 
-    @Get('getApiDetail/:id')
+    @Get('getApiDetail/:pid/:id')
     @RequireLogin()
     @ApiBearerAuth()
-    getApiDetail(@Param('id') id: string, @Req() req: any) {
-        return this.apiService.findApiDetail(+id, req.user as JwtUserData);
+    getApiDetail(@Param('pid') pid: string, @Param('id') id: string, @Req() req: any) {
+        return this.apiService.findApiDetail(+id, +pid, req.user as JwtUserData);
     }
 
     @Post('importApiBySwaggerFile/:pid')

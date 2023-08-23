@@ -1,15 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req } from '@nestjs/common';
 import { ApiArgsService } from './api-args.service';
 import { CreateApiArgDto } from './dto/create-api-arg.dto';
 import { UpdateApiArgDto } from './dto/update-api-arg.dto';
+import { JwtUserData } from 'src/login.guard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { RequireLogin } from 'src/custom.decorator';
 
+@ApiTags('接口参数管理模块')
 @Controller('api-args')
 export class ApiArgsController {
     constructor(private readonly apiArgsService: ApiArgsService) {}
 
-    @Post()
-    create(@Body() createApiArgDto: CreateApiArgDto) {
-        return this.apiArgsService.create(createApiArgDto);
+    @RequireLogin()
+    @ApiBearerAuth()
+    @Post('create')
+    create(@Body() createApiArgDto: CreateApiArgDto, @Req() req: any) {
+        return this.apiArgsService.create(createApiArgDto, req.user as JwtUserData);
     }
 
     @Get()

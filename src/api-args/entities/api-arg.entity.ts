@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity({
-    name: 'apiArgs'
+    name: 'apiarg'
 })
 export class ApiArg {
     @PrimaryGeneratedColumn({
@@ -19,13 +19,6 @@ export class ApiArg {
         comment: '参数名称'
     })
     name: string;
-
-    @Column({
-        length: 1000,
-        comment: '接口描述',
-        nullable: true
-    })
-    description: string;
 
     @Column({
         length: 100,
@@ -51,6 +44,13 @@ export class ApiArg {
         nullable: true
     })
     default: string;
+
+    @Column({
+        length: 1000,
+        comment: '参数说明',
+        nullable: true
+    })
+    description: string;
 
     @Column({
         comment: '是否必填',
