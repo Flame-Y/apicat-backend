@@ -6,6 +6,7 @@ import { JwtUserData } from 'src/login.guard';
 import { ApiArg } from './entities/api-arg.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class ApiArgsService {
@@ -53,11 +54,54 @@ export class ApiArgsService {
         return this.apiArgRepository.find({ where: { aid: aid } });
     }
 
-    update(id: number, updateApiArgDto: UpdateApiArgDto) {
-        return `This action updates a #${id} apiArg`;
+    async update(id: number, updateApiArgDto: UpdateApiArgDto, user: JwtUserData) {
+        console.log(user);
+
+        // 查看用户是否有权限
+        const foundPermission = await this.permissionService.findByPidAndUid(updateApiArgDto.pid, user.userId);
+        if (!foundPermission) {
+            throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
+        } else if (foundPermission.type === 'r') {
+            throw new HttpException('用户权限不足', HttpStatus.BAD_REQUEST);
+        }
+        // 查看参数是否存在
+        const apiArg: ApiArg = await this.apiArgRepository.findOneBy({ id: id });
+        if (!apiArg) {
+            throw new HttpException('参数不存在', HttpStatus.BAD_REQUEST);
+        }
+        try {
+            const newApiArg = {
+                ...apiArg,
+                ...plainToClass(ApiArg, updateApiArgDto)
+            };
+
+            this.apiArgRepository.save(newApiArg);
+            return '更新成功';
+        } catch (e) {
+            this.logger.log(e);
+            return '更新失败';
+        }
     }
 
-    remove(id: number) {
-        return `This action removes a #${id} apiArg`;
+    async remove(id: number, pid: number, user: JwtUserData) {
+        // 查看用户是否有权限
+        const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
+        if (!foundPermission) {
+            throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
+        } else if (foundPermission.type !== 'admin') {
+            throw new HttpException('用户权限不足', HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            const apiArg: ApiArg = await this.apiArgRepository.findOneBy({ id: id });
+            if (!apiArg) {
+                throw new HttpException('参数不存在', HttpStatus.BAD_REQUEST);
+            }
+            this.apiArgRepository.remove(apiArg);
+            return '删除成功';
+        } catch (e) {
+            this.logger.log(e);
+            return '删除失败';
+        }
     }
 }

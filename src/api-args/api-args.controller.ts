@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req } from '@nestjs/common';
+import { Controller, Post, Body, Param, Delete, Req } from '@nestjs/common';
 import { ApiArgsService } from './api-args.service';
 import { CreateApiArgDto } from './dto/create-api-arg.dto';
 import { UpdateApiArgDto } from './dto/update-api-arg.dto';
@@ -18,23 +18,17 @@ export class ApiArgsController {
         return this.apiArgsService.create(createApiArgDto, req.user as JwtUserData);
     }
 
-    @Get()
-    findAll() {
-        return this.apiArgsService.findAll();
+    @RequireLogin()
+    @ApiBearerAuth()
+    @Post('update/:id')
+    update(@Param('id') id: string, @Body() updateApiArgDto: UpdateApiArgDto, @Req() req: any) {
+        return this.apiArgsService.update(+id, updateApiArgDto, req.user as JwtUserData);
     }
 
-    @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.apiArgsService.findOne(+id);
-    }
-
-    @Patch(':id')
-    update(@Param('id') id: string, @Body() updateApiArgDto: UpdateApiArgDto) {
-        return this.apiArgsService.update(+id, updateApiArgDto);
-    }
-
-    @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.apiArgsService.remove(+id);
+    @RequireLogin()
+    @ApiBearerAuth()
+    @Delete('delete/:pid/:id')
+    remove(@Param('id') id: string, @Param('pid') pid: string, @Req() req: any) {
+        return this.apiArgsService.remove(+id, +pid, req.user as JwtUserData);
     }
 }

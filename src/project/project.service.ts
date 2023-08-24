@@ -121,6 +121,7 @@ export class ProjectService {
             this.logger.error(e);
         }
     }
+
     async update(id: number, updateProjectDto: UpdateProjectDto): Promise<string> {
         try {
             const project: Project = await this.projectRepository.findOneBy({

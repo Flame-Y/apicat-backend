@@ -10,13 +10,15 @@ import { ApiArgsService } from 'src/api-args/api-args.service';
 import { JwtUserData } from 'src/login.guard';
 import * as fs from 'fs';
 import { ApiInfoVo } from './vo/api-info.vo';
+import { ApiResponseService } from 'src/api-response/api-response.service';
 @Injectable()
 export class ApiService {
     constructor(
         @Inject(forwardRef(() => ProjectService))
         private readonly projectService: ProjectService,
         private readonly permissionService: PermissionService,
-        private readonly apiArgService: ApiArgsService
+        private readonly apiArgService: ApiArgsService,
+        private readonly apiResponseService: ApiResponseService
     ) {}
     private logger = new Logger();
     @InjectRepository(Api)
@@ -77,10 +79,11 @@ export class ApiService {
         }
         const foundApi = await this.apiRepository.findOneBy({ id: id });
         const foundApiArgs = await this.apiArgService.findByApiId(id);
+        const foundResponse = await this.apiResponseService.findByApiId(id);
         const apiInfoVo = new ApiInfoVo();
         apiInfoVo.apiInfo = foundApi;
         apiInfoVo.apiArgs = foundApiArgs;
-        // apiInfoVo.apiArgs = [];
+        apiInfoVo.apiResponse = foundResponse;
         return apiInfoVo;
     }
     async update(id: number, updateApiDto: UpdateApiDto, pid: number, user: JwtUserData) {

@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity({
-    name: 'apiResponse'
+    name: 'apiresponse'
 })
 export class ApiResponse {
     @PrimaryGeneratedColumn({
@@ -15,13 +15,11 @@ export class ApiResponse {
     aid: number;
 
     @Column({
-        length: 100,
         comment: '状态码'
     })
     HttpStatus: number;
 
     @Column({
-        length: 100,
         comment: '返回码'
     })
     code: number;

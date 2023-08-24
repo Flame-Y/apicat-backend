@@ -49,10 +49,27 @@ class ApiArgs {
     description: string;
 }
 
+class ApiResponse {
+    @ApiProperty()
+    HttpStatus: number;
+
+    @ApiProperty()
+    code: number;
+
+    @ApiProperty()
+    data: string;
+
+    @ApiProperty()
+    mock: string;
+}
+
 export class ApiInfoVo {
     @ApiProperty()
     apiInfo: ApiInfo;
 
     @ApiProperty()
     apiArgs: ApiArgs[];
+
+    @ApiProperty()
+    apiResponse: ApiResponse[];
 }
