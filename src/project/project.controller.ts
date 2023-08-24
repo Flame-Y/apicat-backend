@@ -71,9 +71,9 @@ export class ProjectController {
     @ApiBearerAuth()
     @RequireLogin()
     @Get('getProjectDetail/:id')
-    findOne(@Param('id') id: string) {
+    findOne(@Param('id') id: string, @Req() req: any) {
         //todo: 通过id获取项目详情,包括项目下的所有接口
-        return this.projectService.findOne(+id);
+        return this.projectService.findProjectDetail(+id, req.user as JwtUserData);
     }
 
     @ApiResponse({

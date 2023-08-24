@@ -23,9 +23,43 @@ class ProjectInfo {
     updateTime: Date;
 }
 
+class Permission {
+    @ApiProperty()
+    id: number;
+
+    @ApiProperty()
+    uid: number;
+
+    @ApiProperty()
+    username: string;
+
+    @ApiProperty()
+    type: string;
+}
+
+class Api {
+    @ApiProperty()
+    id: number;
+
+    @ApiProperty()
+    name: string;
+
+    @ApiProperty()
+    type: string;
+
+    @ApiProperty()
+    url: string;
+
+    @ApiProperty()
+    description: string;
+}
 export class ProjectInfoVo {
     @ApiProperty()
     projectInfo: ProjectInfo;
 
-    // todo: 项目权限表
+    @ApiProperty()
+    permissionList: Permission[];
+
+    @ApiProperty()
+    apiList: Api[];
 }

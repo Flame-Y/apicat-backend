@@ -20,6 +20,12 @@ export class Permission {
     uid: number;
 
     @Column({
+        length: 20,
+        comment: '用户名'
+    })
+    username: string;
+
+    @Column({
         length: 10,
         comment: '权限类型:管理、只读或读写(admin, r, rw)'
     })

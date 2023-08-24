@@ -43,6 +43,12 @@ export class UserService {
 
         return vo;
     }
+    async getNameById(userId: number) {
+        const foundUser = await this.userRepository.findOneBy({
+            id: userId
+        });
+        return foundUser.username;
+    }
 
     async register(user: RegisterDto) {
         const foundUser = await this.userRepository.findOneBy({

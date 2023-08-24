@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable, Logger, forwardRef } from '@nestjs/common';
 import { CreateApiDto } from './dto/create-api.dto';
 import { UpdateApiDto } from './dto/update-api.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,6 +13,7 @@ import { ApiInfoVo } from './vo/api-info.vo';
 @Injectable()
 export class ApiService {
     constructor(
+        @Inject(forwardRef(() => ProjectService))
         private readonly projectService: ProjectService,
         private readonly permissionService: PermissionService,
         private readonly apiArgService: ApiArgsService

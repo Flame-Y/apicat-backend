@@ -10,12 +10,15 @@ import { JwtUserData } from 'src/login.guard';
 import { Permission } from 'src/permission/entities/permission.entity';
 import { UserService } from 'src/user/user.service';
 import { ProjectListVo } from './vo/project-list.vo';
+import { ProjectInfoVo } from './vo/project-info.vo';
+import { ApiService } from 'src/api/api.service';
 
 @Injectable()
 export class ProjectService {
     constructor(
         private readonly permissionService: PermissionService,
-        private readonly userService: UserService
+        private readonly userService: UserService,
+        private readonly apiService: ApiService
     ) {}
 
     private logger = new Logger();
@@ -35,6 +38,7 @@ export class ProjectService {
             const permission = new Permission();
             permission.pid = newProject.id;
             permission.uid = user.userId;
+            permission.username = user.username;
             permission.type = 'admin';
             await this.permissionService.create(permission);
             return '创建成功';
@@ -90,6 +94,33 @@ export class ProjectService {
         }
     }
 
+    async findProjectDetail(id: number, user: JwtUserData): Promise<ProjectInfoVo> {
+        try {
+            const project: Project = await this.projectRepository.findOneBy({
+                id: id
+            });
+            if (!project) throw new HttpException('项目不存在', HttpStatus.BAD_REQUEST);
+            // 获取该项目权限表
+            const permList = await this.permissionService.findByPid(id);
+            // 删除权限表中的pid、createTime、updateTime
+            permList.forEach(async (e) => {
+                delete e.pid;
+                delete e.createTime;
+                delete e.updateTime;
+            });
+            // 获取该项目下的所有接口;
+            const apiList = await this.apiService.findByProject(id, user);
+            console.log(apiList);
+
+            const projectInfoVo = new ProjectInfoVo();
+            projectInfoVo.projectInfo = plainToClass(Project, project);
+            projectInfoVo.permissionList = permList;
+            projectInfoVo.apiList = apiList;
+            return projectInfoVo;
+        } catch (e) {
+            this.logger.error(e);
+        }
+    }
     async update(id: number, updateProjectDto: UpdateProjectDto): Promise<string> {
         try {
             const project: Project = await this.projectRepository.findOneBy({
@@ -153,6 +184,7 @@ export class ProjectService {
             const permission = new Permission();
             permission.pid = pid;
             permission.uid = uid;
+            permission.username = foundUser.username;
             permission.type = type;
             await this.permissionService.create(permission);
             return '分配权限成功';
