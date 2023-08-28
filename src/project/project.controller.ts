@@ -129,4 +129,22 @@ export class ProjectController {
             req.user as JwtUserData
         );
     }
+
+    @ApiBearerAuth()
+    @RequireLogin()
+    @Post('getProjectPermission/:page/:size')
+    getProjectPermission(
+        @Param('page') page: string,
+        @Param('size') size: string,
+        @Body() assignPermission: AssginPermissionDto,
+        @Req() req: any
+    ) {
+        return this.projectService.getProjectPermission(
+            assignPermission.pid,
+            assignPermission.type,
+            +page,
+            +size,
+            req.user as JwtUserData
+        );
+    }
 }

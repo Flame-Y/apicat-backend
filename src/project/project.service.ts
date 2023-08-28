@@ -32,6 +32,7 @@ export class ProjectService {
         newProject.updateTime = new Date();
         newProject.creatorId = user.userId;
         newProject.creatorName = user.username;
+        newProject.apiCount = 0;
         try {
             await this.projectRepository.save(newProject);
             //在permission表中添加记录
@@ -58,14 +59,14 @@ export class ProjectService {
         }
     }
 
-    async findByUser(user: JwtUserData): Promise<ProjectListVo[]> {
+    async findByUser(user: JwtUserData) {
         try {
             const permList = await this.permissionService.findByUser(user.userId);
             const projectIdList = permList.map((e) => e.pid);
             const projectList: Project[] = await this.projectRepository.findBy({
                 id: In(projectIdList)
             });
-            // 将Project[]转换为ProjectListVo[]并加入权限信息
+            // 将Project[]转换为ProjectListVo[]并加入权限信息与接口数量
             const projectListVo: ProjectListVo[] = projectList.map((e) => {
                 // 去除creatorId、creatorName、description
                 delete e.creatorId;
@@ -76,7 +77,7 @@ export class ProjectService {
                 vo.permission = perm.type;
                 return vo;
             });
-            return projectListVo;
+            return { records: projectListVo, total: projectListVo.length };
         } catch (e) {
             this.logger.error(e);
         }
@@ -89,6 +90,32 @@ export class ProjectService {
             });
             if (!project) throw new HttpException('项目不存在', HttpStatus.BAD_REQUEST);
             return project;
+        } catch (e) {
+            this.logger.error(e);
+        }
+    }
+
+    async incrementApiCount(id: number, number: number) {
+        try {
+            const project: Project = await this.projectRepository.findOneBy({
+                id: id
+            });
+            if (!project) throw new HttpException('项目不存在', HttpStatus.BAD_REQUEST);
+            project.apiCount += number;
+            await this.projectRepository.save(project);
+        } catch (e) {
+            this.logger.error(e);
+        }
+    }
+
+    async decrementApiCount(id: number, number: number) {
+        try {
+            const project: Project = await this.projectRepository.findOneBy({
+                id: id
+            });
+            if (!project) throw new HttpException('项目不存在', HttpStatus.BAD_REQUEST);
+            project.apiCount -= number;
+            await this.projectRepository.save(project);
         } catch (e) {
             this.logger.error(e);
         }
@@ -109,13 +136,12 @@ export class ProjectService {
                 delete e.updateTime;
             });
             // 获取该项目下的所有接口;
-            const apiList = await this.apiService.findByProject(id, user);
-            console.log(apiList);
+            const apiList = await this.apiService.findByProject(id, 1, Number.MAX_SAFE_INTEGER, user);
 
             const projectInfoVo = new ProjectInfoVo();
             projectInfoVo.projectInfo = plainToClass(Project, project);
             projectInfoVo.permissionList = permList;
-            projectInfoVo.apiList = apiList;
+            projectInfoVo.apiList = apiList.records;
             return projectInfoVo;
         } catch (e) {
             this.logger.error(e);
@@ -172,7 +198,8 @@ export class ProjectService {
         if (!['admin', 'r', 'rw'].includes(type)) throw new HttpException('权限类型错误', HttpStatus.BAD_REQUEST);
         if (!project) throw new HttpException('项目不存在', HttpStatus.BAD_REQUEST);
         if (project.creatorId !== user.userId) throw new HttpException('没有分配权限', HttpStatus.UNAUTHORIZED);
-        if (project.creatorId === uid) throw new HttpException('不能分配给自己', HttpStatus.BAD_REQUEST);
+
+        if (project.creatorId == uid) throw new HttpException('不能分配给自己', HttpStatus.BAD_REQUEST);
         // 查询是否已经分配过权限
         const foundPermission = await this.permissionService.findByPidAndUid(pid, uid);
         // 如果已经分配过权限，则更新权限
@@ -192,6 +219,44 @@ export class ProjectService {
         } catch (e) {
             this.logger.error(e);
             return '分配权限失败';
+        }
+    }
+
+    //  获取项目成员
+    async getProjectPermission(pid: number, type: string, page: number, size: number, user: JwtUserData): Promise<any> {
+        //查询用户是否有权限
+        const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
+        if (!foundPermission) throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
+        const project: Project = await this.projectRepository.findOneBy({
+            id: pid
+        });
+        if (!project) throw new HttpException('项目不存在', HttpStatus.BAD_REQUEST);
+        try {
+            let permList = await this.permissionService.findByPid(pid);
+            //根据type过滤
+            if (type === 'all') {
+                // 不做处理
+            } else if (type === 'admin') {
+                permList = permList.filter((e) => e.type === 'admin');
+            } else if (type === 'r') {
+                permList = permList.filter((e) => e.type === 'r');
+            } else if (type === 'rw') {
+                permList = permList.filter((e) => e.type === 'rw');
+            } else {
+                throw new HttpException('权限类型错误', HttpStatus.BAD_REQUEST);
+            }
+            const total = permList.length;
+            // 根据page和size分页
+            const start = (page - 1) * size;
+            const end = page * size;
+            permList.sort((a, b) => {
+                return b.id - a.id;
+            });
+            permList.splice(end, permList.length - end);
+            permList.splice(0, start);
+            return { records: permList, total: total };
+        } catch (e) {
+            this.logger.error(e);
         }
     }
 }

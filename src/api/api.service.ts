@@ -11,6 +11,7 @@ import { JwtUserData } from 'src/login.guard';
 import * as fs from 'fs';
 import { ApiInfoVo } from './vo/api-info.vo';
 import { ApiResponseService } from 'src/api-response/api-response.service';
+import { CreateApiArgDto } from 'src/api-args/dto/create-api-arg.dto';
 @Injectable()
 export class ApiService {
     constructor(
@@ -29,7 +30,6 @@ export class ApiService {
         if (!foundProject) {
             throw new HttpException('项目不存在', HttpStatus.BAD_REQUEST);
         }
-        console.log(foundProject);
 
         // 查看用户是否有权限
         const foundPermission = await this.permissionService.findByPidAndUid(createApiDto.pid, user.userId);
@@ -45,8 +45,31 @@ export class ApiService {
             api.description = createApiDto.description;
             api.type = createApiDto.type;
             api.url = createApiDto.url;
+
             api.pid = createApiDto.pid;
             await this.apiRepository.save(api);
+            //获取api的id
+            const foundApi = await this.apiRepository.findOneBy({ pid: createApiDto.pid, url: createApiDto.url });
+            //  若url中含有：格式的动态参数，在api表中添加参数
+            const reg = /\/:[a-zA-Z0-9]+/g;
+            const matchResult = api.url.match(reg);
+            if (matchResult) {
+                matchResult.forEach(async (item) => {
+                    const apiArg = new CreateApiArgDto();
+                    apiArg.aid = foundApi.id;
+                    apiArg.pid = createApiDto.pid;
+                    apiArg.name = item.replace('/:', '');
+                    apiArg.argType = 'path';
+                    apiArg.form = 'multipart/form-data';
+                    apiArg.dataType = 'string';
+                    apiArg.required = true;
+                    apiArg.description = '自动生成的动态参数';
+                    apiArg.default = '';
+                    await this.apiArgService.create(apiArg, user);
+                });
+            }
+            //更新项目的api数量
+            await this.projectService.incrementApiCount(createApiDto.pid, 1);
             return '创建成功';
         } catch (e) {
             this.logger.log(e);
@@ -62,14 +85,27 @@ export class ApiService {
         return `This action returns a #${id} api`;
     }
 
-    async findByProject(pid: number, user: JwtUserData) {
+    findApiCountByProject(pid: number) {
+        return this.apiRepository.countBy({ pid: pid });
+    }
+
+    async findByProject(pid: number, page: number, size: number, user: JwtUserData) {
         // 查看用户是否有权限
         const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
         if (!foundPermission) {
             throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
         }
         const apiList = await this.apiRepository.findBy({ pid: pid });
-        return apiList;
+        const total = apiList.length;
+        // 按页数返回
+        const start = (page - 1) * size;
+        const end = page * size;
+        apiList.sort((a, b) => {
+            return b.id - a.id;
+        });
+        apiList.splice(end, apiList.length - end);
+        apiList.splice(0, start);
+        return { records: apiList, total: total };
     }
 
     async findApiDetail(id: number, pid: number, user: JwtUserData): Promise<ApiInfoVo> {
@@ -86,7 +122,7 @@ export class ApiService {
         apiInfoVo.apiResponse = foundResponse;
         return apiInfoVo;
     }
-    async update(id: number, updateApiDto: UpdateApiDto, pid: number, user: JwtUserData) {
+    async update(id: number, pid: number, updateApiDto: UpdateApiDto, user: JwtUserData) {
         // 查看用户是否有权限
         const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
         if (!foundPermission) {
@@ -119,6 +155,8 @@ export class ApiService {
 
         try {
             await this.apiRepository.delete(id);
+            // 减去项目的api数量
+            await this.projectService.decrementApiCount(pid, 1);
             return '删除成功';
         } catch (e) {
             this.logger.log(e);
@@ -151,12 +189,14 @@ export class ApiService {
                 api.url = url;
                 api.pid = pid;
                 apiList.push(api);
+                // 统计项目的api数量
             }
             //todo: 同名接口处理
             //todo: 与schema关联
 
             // 将接口信息保存到数据库
             await this.apiRepository.save(apiList);
+            await this.projectService.incrementApiCount(pid, apiList.length);
             // 删除swagger文件
             fs.unlinkSync(filePath);
             return '导入成功';

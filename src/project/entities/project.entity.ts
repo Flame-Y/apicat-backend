@@ -25,6 +25,12 @@ export class Project {
     creatorName: string;
 
     @Column({
+        comment: '接口数量',
+        default: 0
+    })
+    apiCount: number;
+
+    @Column({
         length: 1000,
         comment: '项目描述',
         nullable: true

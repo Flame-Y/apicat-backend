@@ -20,18 +20,18 @@ export class ApiController {
         return this.apiService.create(createApiDto, req.user as JwtUserData);
     }
 
-    @Get('getProjectApiList/:pid')
+    @Get('getProjectApiList/:pid/:page/:size')
     @RequireLogin()
     @ApiBearerAuth()
-    findAll(@Param('pid') pid: string, @Req() req: any) {
-        return this.apiService.findByProject(+pid, req.user as JwtUserData);
+    findAll(@Param('pid') pid: string, @Param('page') page: string, @Param('size') size: string, @Req() req: any) {
+        return this.apiService.findByProject(+pid, +page, +size, req.user as JwtUserData);
     }
 
-    @Get('update/:pid/:id')
+    @Post('update/:pid/:id')
     @RequireLogin()
     @ApiBearerAuth()
-    findOne(@Param('pid') pid: string, @Param('id') @Body() updateApiDto: UpdateApiDto, id: string, @Req() req: any) {
-        return this.apiService.update(+id, updateApiDto, +pid, req.user as JwtUserData);
+    findOne(@Param('pid') pid: string, @Param('id') id: string, @Body() updateApiDto: UpdateApiDto, @Req() req: any) {
+        return this.apiService.update(+id, +pid, updateApiDto, req.user as JwtUserData);
     }
 
     @Delete('deleteApi/:pid/:id')

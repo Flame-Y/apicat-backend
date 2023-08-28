@@ -8,6 +8,9 @@ export class ProjectListVo {
     name: string;
 
     @ApiProperty()
+    apiCount: number;
+
+    @ApiProperty()
     createTime: Date;
 
     @ApiProperty()

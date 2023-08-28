@@ -1,0 +1,19 @@
+## 报错
+
+### 数组
+
+#### map is not a function
+
+通常发生在尝试在非数组类型上使用map函数时。
+
+![image-20230718204807288](C:\Users\长炎\AppData\Roaming\Typora\typora-user-images\image-20230718204807288.png)
+
+此处的本意是将posts参数声明为一个IPostListProps类型的数组。但是在函数体中，它被当作一个单独的对象来处理，而不是一个数组。
+
+![image-20230718204724409](C:\Users\长炎\AppData\Roaming\Typora\typora-user-images\image-20230718204724409.png)
+
+我们使用对象解构赋值的语法将posts属性从传入的参数对象中提取出来，并将其声明为一个IPostListProps类型的数组。这样，在函数体中，posts将被正确地视为一个数组，可以使用map函数进行迭代。
+
+PS：此处的类型注解是以下方式的简写
+
+![image-20230718214011688](C:\Users\长炎\AppData\Roaming\Typora\typora-user-images\image-20230718214011688.png)
