@@ -9,8 +9,8 @@ import { UserModule } from './user/user.module';
 import { User } from './user/entities/user.entity';
 import { ProjectModule } from './project/project.module';
 import { Project } from './project/entities/project.entity';
-import { Permission } from './permission/entities/permission.entity';
-import { PermissionModule } from './permission/permission.module';
+import { ProjectPermission } from './project-permission/entities/project-permission.entity';
+import { ProjectPermissionModule } from './project-permission/project-permission.module';
 import { APP_GUARD } from '@nestjs/core';
 import { LoginGuard } from './login.guard';
 import { ApiModule } from './api/api.module';
@@ -32,7 +32,7 @@ import { ApiResponse } from './api-response/entities/api-response.entity';
                 database: ConfigService.get('mysql_server_database'), //数据库名字配置
                 synchronize: true,
                 logging: true,
-                entities: [User, Project, Permission, Api, ApiArg, ApiResponse],
+                entities: [User, Project, ProjectPermission, Api, ApiArg, ApiResponse],
                 poolSize: 10,
                 connectorPackage: 'mysql2',
                 extra: {
@@ -51,7 +51,7 @@ import { ApiResponse } from './api-response/entities/api-response.entity';
         UserModule,
         ConfigModule.forRoot({ isGlobal: true, envFilePath: 'src/.env' }),
         ProjectModule,
-        PermissionModule,
+        ProjectPermissionModule,
         ApiModule,
         ApiArgsModule,
         ApiResponseModule

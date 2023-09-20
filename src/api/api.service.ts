@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Api } from './entities/api.entity';
 import { ProjectService } from 'src/project/project.service';
-import { PermissionService } from 'src/permission/permission.service';
+import { ProjectPermissionService } from 'src/project-permission/project-permission.service';
 import { ApiArgsService } from 'src/api-args/api-args.service';
 import { JwtUserData } from 'src/login.guard';
 import * as fs from 'fs';
@@ -17,7 +17,7 @@ export class ApiService {
     constructor(
         @Inject(forwardRef(() => ProjectService))
         private readonly projectService: ProjectService,
-        private readonly permissionService: PermissionService,
+        private readonly projectPermissionService: ProjectPermissionService,
         private readonly apiArgService: ApiArgsService,
         private readonly apiResponseService: ApiResponseService
     ) {}
@@ -32,7 +32,7 @@ export class ApiService {
         }
 
         // 查看用户是否有权限
-        const foundPermission = await this.permissionService.findByPidAndUid(createApiDto.pid, user.userId);
+        const foundPermission = await this.projectPermissionService.findByPidAndUid(createApiDto.pid, user.userId);
         if (!foundPermission) {
             throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
         } else if (foundPermission.type === 'r') {
@@ -91,7 +91,7 @@ export class ApiService {
 
     async findByProject(pid: number, page: number, size: number, user: JwtUserData) {
         // 查看用户是否有权限
-        const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
+        const foundPermission = await this.projectPermissionService.findByPidAndUid(pid, user.userId);
         if (!foundPermission) {
             throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
         }
@@ -109,7 +109,7 @@ export class ApiService {
     }
 
     async findApiDetail(id: number, pid: number, user: JwtUserData): Promise<ApiInfoVo> {
-        const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
+        const foundPermission = await this.projectPermissionService.findByPidAndUid(pid, user.userId);
         if (!foundPermission) {
             throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
         }
@@ -124,7 +124,7 @@ export class ApiService {
     }
     async update(id: number, pid: number, updateApiDto: UpdateApiDto, user: JwtUserData) {
         // 查看用户是否有权限
-        const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
+        const foundPermission = await this.projectPermissionService.findByPidAndUid(pid, user.userId);
         if (!foundPermission) {
             throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
         } else if (foundPermission.type === 'r') {
@@ -146,7 +146,7 @@ export class ApiService {
 
     async remove(id: number, pid: number, user: JwtUserData) {
         // 查看用户是否有权限
-        const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
+        const foundPermission = await this.projectPermissionService.findByPidAndUid(pid, user.userId);
         if (!foundPermission) {
             throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
         } else if (foundPermission.type === 'r') {
@@ -166,7 +166,7 @@ export class ApiService {
     // 导入swagger文档接口
     async importApiBySwaggerFile(pid: number, user: JwtUserData, swaggerFile: any) {
         // 查看用户是否有权限
-        const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
+        const foundPermission = await this.projectPermissionService.findByPidAndUid(pid, user.userId);
         if (!foundPermission) {
             throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
         } else if (foundPermission.type === 'r') {

@@ -1,9 +1,9 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity({
-    name: 'permission'
+    name: 'projectpermission'
 })
-export class Permission {
+export class ProjectPermission {
     @PrimaryGeneratedColumn({
         comment: '权限id(只在更新时使用)'
     })
@@ -13,6 +13,11 @@ export class Permission {
         comment: '项目id'
     })
     pid: number;
+
+    @Column({
+        comment: '队伍id'
+    })
+    tid: number;
 
     @Column({
         comment: '用户id'

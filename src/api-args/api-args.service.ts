@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { CreateApiArgDto } from './dto/create-api-arg.dto';
 import { UpdateApiArgDto } from './dto/update-api-arg.dto';
-import { PermissionService } from 'src/permission/permission.service';
+import { ProjectPermissionService } from 'src/project-permission/project-permission.service';
 import { JwtUserData } from 'src/login.guard';
 import { ApiArg } from './entities/api-arg.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,13 +10,13 @@ import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class ApiArgsService {
-    constructor(private readonly permissionService: PermissionService) {}
+    constructor(private readonly projectPermissionService: ProjectPermissionService) {}
     private logger = new Logger();
     @InjectRepository(ApiArg)
     private apiArgRepository: Repository<ApiArg>;
     async create(createApiArgDto: CreateApiArgDto, user: JwtUserData) {
         // 查看用户是否有权限
-        const foundPermission = await this.permissionService.findByPidAndUid(createApiArgDto.pid, user.userId);
+        const foundPermission = await this.projectPermissionService.findByPidAndUid(createApiArgDto.pid, user.userId);
         if (!foundPermission) {
             throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
         } else if (foundPermission.type === 'r') {
@@ -58,7 +58,7 @@ export class ApiArgsService {
         console.log(user);
 
         // 查看用户是否有权限
-        const foundPermission = await this.permissionService.findByPidAndUid(updateApiArgDto.pid, user.userId);
+        const foundPermission = await this.projectPermissionService.findByPidAndUid(updateApiArgDto.pid, user.userId);
         if (!foundPermission) {
             throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
         } else if (foundPermission.type === 'r') {
@@ -85,7 +85,7 @@ export class ApiArgsService {
 
     async remove(id: number, pid: number, user: JwtUserData) {
         // 查看用户是否有权限
-        const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
+        const foundPermission = await this.projectPermissionService.findByPidAndUid(pid, user.userId);
         if (!foundPermission) {
             throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
         } else if (foundPermission.type !== 'admin') {

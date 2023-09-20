@@ -5,9 +5,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Project } from './entities/project.entity';
 import { plainToClass } from 'class-transformer';
-import { PermissionService } from 'src/permission/permission.service';
+import { ProjectPermissionService } from 'src/project-permission/project-permission.service';
 import { JwtUserData } from 'src/login.guard';
-import { Permission } from 'src/permission/entities/permission.entity';
+import { ProjectPermission } from 'src/project-permission/entities/project-permission.entity';
 import { UserService } from 'src/user/user.service';
 import { ProjectListVo } from './vo/project-list.vo';
 import { ProjectInfoVo } from './vo/project-info.vo';
@@ -16,7 +16,7 @@ import { ApiService } from 'src/api/api.service';
 @Injectable()
 export class ProjectService {
     constructor(
-        private readonly permissionService: PermissionService,
+        private readonly projectPermissionService: ProjectPermissionService,
         private readonly userService: UserService,
         private readonly apiService: ApiService
     ) {}
@@ -35,13 +35,13 @@ export class ProjectService {
         newProject.apiCount = 0;
         try {
             await this.projectRepository.save(newProject);
-            //在permission表中添加记录
-            const permission = new Permission();
-            permission.pid = newProject.id;
-            permission.uid = user.userId;
-            permission.username = user.username;
-            permission.type = 'admin';
-            await this.permissionService.create(permission);
+            //在project-permission表中添加记录
+            const projectPermission = new ProjectPermission();
+            projectPermission.pid = newProject.id;
+            projectPermission.uid = user.userId;
+            projectPermission.username = user.username;
+            projectPermission.type = 'admin';
+            await this.projectPermissionService.create(projectPermission);
             return '创建成功';
         } catch (e) {
             this.logger.error(e, ProjectService);
@@ -51,7 +51,7 @@ export class ProjectService {
 
     async findAll(): Promise<Project[]> {
         try {
-            // const permList = await this.permissionService.findByUser()
+            // const permList = await this.projectPermissionService.findByUser()
             const projectList: Project[] = await this.projectRepository.find();
             return projectList;
         } catch (e) {
@@ -61,7 +61,7 @@ export class ProjectService {
 
     async findByUser(user: JwtUserData) {
         try {
-            const permList = await this.permissionService.findByUser(user.userId);
+            const permList = await this.projectPermissionService.findByUser(user.userId);
             const projectIdList = permList.map((e) => e.pid);
             const projectList: Project[] = await this.projectRepository.findBy({
                 id: In(projectIdList)
@@ -128,7 +128,7 @@ export class ProjectService {
             });
             if (!project) throw new HttpException('项目不存在', HttpStatus.BAD_REQUEST);
             // 获取该项目权限表
-            const permList = await this.permissionService.findByPid(id);
+            const permList = await this.projectPermissionService.findByPid(id);
             // 删除权限表中的pid、createTime、updateTime
             permList.forEach(async (e) => {
                 delete e.pid;
@@ -176,9 +176,9 @@ export class ProjectService {
         try {
             this.projectRepository.remove(project);
             // 删除权限表中的记录
-            const perms = await this.permissionService.findByPid(id);
+            const perms = await this.projectPermissionService.findByPid(id);
             perms.forEach(async (perm) => {
-                await this.permissionService.delete(perm);
+                await this.projectPermissionService.delete(perm);
             });
             return '删除成功';
         } catch (e) {
@@ -201,20 +201,20 @@ export class ProjectService {
 
         if (project.creatorId == uid) throw new HttpException('不能分配给自己', HttpStatus.BAD_REQUEST);
         // 查询是否已经分配过权限
-        const foundPermission = await this.permissionService.findByPidAndUid(pid, uid);
+        const foundPermission = await this.projectPermissionService.findByPidAndUid(pid, uid);
         // 如果已经分配过权限，则更新权限
         if (foundPermission) {
             foundPermission.type = type;
-            await this.permissionService.update(foundPermission);
+            await this.projectPermissionService.update(foundPermission);
             throw new HttpException('更新权限成功', HttpStatus.OK);
         }
         try {
-            const permission = new Permission();
-            permission.pid = pid;
-            permission.uid = uid;
-            permission.username = foundUser.username;
-            permission.type = type;
-            await this.permissionService.create(permission);
+            const projectPermission = new ProjectPermission();
+            projectPermission.pid = pid;
+            projectPermission.uid = uid;
+            projectPermission.username = foundUser.username;
+            projectPermission.type = type;
+            await this.projectPermissionService.create(projectPermission);
             return '分配权限成功';
         } catch (e) {
             this.logger.error(e);
@@ -225,14 +225,14 @@ export class ProjectService {
     //  获取项目成员
     async getProjectPermission(pid: number, type: string, page: number, size: number, user: JwtUserData): Promise<any> {
         //查询用户是否有权限
-        const foundPermission = await this.permissionService.findByPidAndUid(pid, user.userId);
+        const foundPermission = await this.projectPermissionService.findByPidAndUid(pid, user.userId);
         if (!foundPermission) throw new HttpException('用户没有权限', HttpStatus.BAD_REQUEST);
         const project: Project = await this.projectRepository.findOneBy({
             id: pid
         });
         if (!project) throw new HttpException('项目不存在', HttpStatus.BAD_REQUEST);
         try {
-            let permList = await this.permissionService.findByPid(pid);
+            let permList = await this.projectPermissionService.findByPid(pid);
             //根据type过滤
             if (type === 'all') {
                 // 不做处理

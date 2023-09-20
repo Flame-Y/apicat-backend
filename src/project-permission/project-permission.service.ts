@@ -1,14 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Permission } from './entities/permission.entity';
+import { ProjectPermission } from './entities/project-permission.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
-export class PermissionService {
+export class ProjectPermissionService {
     private logger = new Logger();
-    @InjectRepository(Permission)
-    private permissionRepository: Repository<Permission>;
-    async findByUser(id: number): Promise<Permission[]> {
+    @InjectRepository(ProjectPermission)
+    private permissionRepository: Repository<ProjectPermission>;
+    async findByUser(id: number): Promise<ProjectPermission[]> {
         try {
             const perms = await this.permissionRepository.findBy({
                 uid: id
@@ -19,7 +19,7 @@ export class PermissionService {
         }
     }
 
-    async create(permission: Permission) {
+    async create(permission: ProjectPermission) {
         try {
             await this.permissionRepository.save(permission);
         } catch (e) {
@@ -27,7 +27,7 @@ export class PermissionService {
         }
     }
 
-    async update(permission: Permission) {
+    async update(permission: ProjectPermission) {
         try {
             await this.permissionRepository.update(permission.id, permission);
         } catch (e) {
@@ -35,7 +35,7 @@ export class PermissionService {
         }
     }
 
-    async delete(permission: Permission) {
+    async delete(permission: ProjectPermission) {
         try {
             await this.permissionRepository.delete(permission.id);
         } catch (e) {
@@ -43,7 +43,7 @@ export class PermissionService {
         }
     }
 
-    async findByPid(pid: number): Promise<Permission[]> {
+    async findByPid(pid: number): Promise<ProjectPermission[]> {
         try {
             const perms = await this.permissionRepository.findBy({
                 pid
@@ -54,7 +54,7 @@ export class PermissionService {
         }
     }
 
-    async findByPidAndUid(pid: number, uid: number): Promise<Permission> {
+    async findByPidAndUid(pid: number, uid: number): Promise<ProjectPermission> {
         try {
             const perms = await this.permissionRepository.findOneBy({
                 pid,
