@@ -1,21 +1,16 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity({
-    name: 'projectpermission'
+    name: 'teampermission'
 })
-export class ProjectPermission {
+export class TeamPermission {
     @PrimaryGeneratedColumn({
-        comment: '项目权限id(只在更新时使用)'
+        comment: '团队权限id(只在更新时使用)'
     })
     id: number;
 
     @Column({
-        comment: '项目id'
-    })
-    pid: number;
-
-    @Column({
-        comment: '队伍id'
+        comment: '团队id'
     })
     tid: number;
 
@@ -32,7 +27,7 @@ export class ProjectPermission {
 
     @Column({
         length: 10,
-        comment: '权限类型:项目管理员（admin）、项目编辑者（rw)、项目查看者（r）'
+        comment: '权限类型:团队所有者（owner）、团队管理员（admin）、团队成员（member）'
     })
     type: string;
 

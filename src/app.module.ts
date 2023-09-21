@@ -19,6 +19,10 @@ import { ApiArgsModule } from './api-args/api-args.module';
 import { ApiResponseModule } from './api-response/api-response.module';
 import { ApiArg } from './api-args/entities/api-arg.entity';
 import { ApiResponse } from './api-response/entities/api-response.entity';
+import { TeamModule } from './team/team.module';
+import { Team } from './team/entities/team.entity';
+import { TeamPermissionModule } from './team-permission/team-permission.module';
+import { TeamPermission } from './team-permission/entities/team-permission.entity';
 
 @Module({
     imports: [
@@ -32,7 +36,7 @@ import { ApiResponse } from './api-response/entities/api-response.entity';
                 database: ConfigService.get('mysql_server_database'), //数据库名字配置
                 synchronize: true,
                 logging: true,
-                entities: [User, Project, ProjectPermission, Api, ApiArg, ApiResponse],
+                entities: [User, Project, ProjectPermission, Api, ApiArg, ApiResponse, Team, TeamPermission],
                 poolSize: 10,
                 connectorPackage: 'mysql2',
                 extra: {
@@ -54,7 +58,9 @@ import { ApiResponse } from './api-response/entities/api-response.entity';
         ProjectPermissionModule,
         ApiModule,
         ApiArgsModule,
-        ApiResponseModule
+        ApiResponseModule,
+        TeamModule,
+        TeamPermissionModule
     ],
     controllers: [AppController],
     providers: [AppService, { provide: APP_GUARD, useClass: LoginGuard }]
