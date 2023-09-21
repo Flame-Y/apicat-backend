@@ -16,15 +16,22 @@ export class Team {
     name: string;
 
     @Column({
+        length: 20,
+        comment: '团队图标',
+        nullable: true
+    })
+    icon: string;
+
+    @Column({
         comment: '团队所有者id'
     })
-    creatorId: number;
+    ownerId: number;
 
     @Column({
         length: 100,
         comment: '团队所有者名称'
     })
-    creatorName: string;
+    ownerName: string;
 
     @Column({
         comment: '项目数量',
