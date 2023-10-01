@@ -30,11 +30,11 @@ export class TeamController {
         return this.teamService.updateInfo(+id, updateTeamDto);
     }
 
-    @Post('transferTeam/:id/:newOwnerId')
+    @Post('transferTeam/:teamId/:newOwnerId')
     @RequireLogin()
     @ApiBearerAuth()
-    transferTeamOwner(@Param('id') id: string, @Param('newOwnerId') newOwnerId: string, @Req() req: any) {
-        return this.teamService.transferTeamOwner(+id, +newOwnerId, req.user as JwtUserData);
+    transferTeamOwner(@Param('teamId') teamId: string, @Param('newOwnerId') newOwnerId: string, @Req() req: any) {
+        return this.teamService.transferTeamOwner(+teamId, +newOwnerId, req.user as JwtUserData);
     }
 
     @Delete('deleteTeam/:id')

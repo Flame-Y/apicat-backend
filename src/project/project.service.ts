@@ -95,6 +95,17 @@ export class ProjectService {
         }
     }
 
+    async findByTid(tid: number): Promise<Project[]> {
+        try {
+            const projectList: Project[] = await this.projectRepository.findBy({
+                creatorId: tid
+            });
+            return projectList;
+        } catch (e) {
+            this.logger.error(e);
+        }
+    }
+
     async incrementApiCount(id: number, number: number) {
         try {
             const project: Project = await this.projectRepository.findOneBy({
@@ -171,6 +182,7 @@ export class ProjectService {
         });
         if (!project) throw new HttpException('项目不存在', HttpStatus.BAD_REQUEST);
         //查询用户是否有删除权限
+        //todo: 由判断项目创建者改为从权限表中查询
         if (project.creatorId !== user.userId) throw new HttpException('没有删除权限', HttpStatus.UNAUTHORIZED);
 
         try {

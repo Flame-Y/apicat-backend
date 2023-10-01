@@ -1,11 +1,55 @@
-import { Injectable } from '@nestjs/common';
-import { CreateTeamPermissionDto } from './dto/create-team-permission.dto';
-import { UpdateTeamPermissionDto } from './dto/update-team-permission.dto';
+import { Injectable, Logger } from '@nestjs/common';
+import { TeamPermission } from './entities/team-permission.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class TeamPermissionService {
-    create(createTeamPermissionDto: CreateTeamPermissionDto) {
-        return 'This action adds a new teamPermission';
+    private logger = new Logger();
+    @InjectRepository(TeamPermission)
+    private teamPermissionRepository: Repository<TeamPermission>;
+
+    // 根据用户id查找团队权限
+    async findByUser(id: number): Promise<TeamPermission[]> {
+        try {
+            const perms = await this.teamPermissionRepository.findBy({
+                uid: id
+            });
+            return perms;
+        } catch (e) {
+            this.logger.log(e);
+        }
+    }
+    // 根据团队id查找团队权限
+    async findByTid(tid: number): Promise<TeamPermission[]> {
+        try {
+            const perms = await this.teamPermissionRepository.findBy({
+                tid
+            });
+            return perms;
+        } catch (e) {
+            this.logger.log(e);
+        }
+    }
+    // 根据团队id与用户id查找团队权限
+    async findByTidAndUid(tid: number, uid: number): Promise<TeamPermission> {
+        try {
+            const perms = await this.teamPermissionRepository.findOneBy({
+                tid,
+                uid
+            });
+            return perms;
+        } catch (e) {
+            this.logger.log(e);
+        }
+    }
+
+    async create(permission: TeamPermission) {
+        try {
+            await this.teamPermissionRepository.save(permission);
+        } catch (e) {
+            this.logger.log(e);
+        }
     }
 
     findAll() {
@@ -16,11 +60,19 @@ export class TeamPermissionService {
         return `This action returns a #${id} teamPermission`;
     }
 
-    update(id: number, updateTeamPermissionDto: UpdateTeamPermissionDto) {
-        return `This action updates a #${id} teamPermission`;
+    async update(permission: TeamPermission) {
+        try {
+            await this.teamPermissionRepository.update(permission.id, permission);
+        } catch (e) {
+            this.logger.log(e);
+        }
     }
 
-    remove(id: number) {
-        return `This action removes a #${id} teamPermission`;
+    async delete(permission: TeamPermission) {
+        try {
+            await this.teamPermissionRepository.delete(permission.id);
+        } catch (e) {
+            this.logger.log(e);
+        }
     }
 }

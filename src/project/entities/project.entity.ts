@@ -14,13 +14,13 @@ export class Project {
     name: string;
 
     @Column({
-        comment: '创建者id'
+        comment: '创建团队id（个人项目则为-1）'
     })
     creatorId: number;
 
     @Column({
         length: 100,
-        comment: '创建者名称'
+        comment: '创建团队名称（个人项目则为用户名）'
     })
     creatorName: string;
 
