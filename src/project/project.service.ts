@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable, Logger, forwardRef } from '@nestjs/common';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,13 +12,16 @@ import { UserService } from 'src/user/user.service';
 import { ProjectListVo } from './vo/project-list.vo';
 import { ProjectInfoVo } from './vo/project-info.vo';
 import { ApiService } from 'src/api/api.service';
+import { TeamService } from 'src/team/team.service';
 
 @Injectable()
 export class ProjectService {
     constructor(
         private readonly projectPermissionService: ProjectPermissionService,
         private readonly userService: UserService,
-        private readonly apiService: ApiService
+        private readonly apiService: ApiService,
+        @Inject(forwardRef(() => TeamService))
+        private readonly teamService: TeamService
     ) {}
 
     private logger = new Logger();
@@ -26,12 +29,14 @@ export class ProjectService {
     @InjectRepository(Project)
     private projectRepository: Repository<Project>;
 
-    async create(projectDto: CreateProjectDto, user: JwtUserData) {
+    //以个人身份创建项目
+    async createPersonalProject(projectDto: CreateProjectDto, user: JwtUserData) {
         const newProject = plainToClass(Project, projectDto);
         newProject.createTime = new Date();
         newProject.updateTime = new Date();
         newProject.creatorId = user.userId;
         newProject.creatorName = user.username;
+        newProject.type = 0;
         newProject.apiCount = 0;
         try {
             await this.projectRepository.save(newProject);
@@ -42,6 +47,27 @@ export class ProjectService {
             projectPermission.username = user.username;
             projectPermission.type = 'admin';
             await this.projectPermissionService.create(projectPermission);
+            return '创建成功';
+        } catch (e) {
+            this.logger.error(e, ProjectService);
+            return '创建失败';
+        }
+    }
+
+    //以团队身份创建项目
+    async createTeamProject(projectDto: CreateProjectDto, user: JwtUserData, tid: number) {
+        const newProject = plainToClass(Project, projectDto);
+        newProject.createTime = new Date();
+        newProject.updateTime = new Date();
+        newProject.creatorId = tid;
+        //根据tid查询团队
+        const teamName = await this.teamService.findByTid(tid);
+        if (!teamName) throw new HttpException('团队不存在', HttpStatus.BAD_REQUEST);
+        else typeof teamName !== 'string' ? (newProject.creatorName = teamName.name) : '';
+        newProject.type = 1;
+        newProject.apiCount = 0;
+        try {
+            await this.projectRepository.save(newProject);
             return '创建成功';
         } catch (e) {
             this.logger.error(e, ProjectService);
@@ -182,8 +208,8 @@ export class ProjectService {
         });
         if (!project) throw new HttpException('项目不存在', HttpStatus.BAD_REQUEST);
         //查询用户是否有删除权限
-        //todo: 由判断项目创建者改为从权限表中查询
-        if (project.creatorId !== user.userId) throw new HttpException('没有删除权限', HttpStatus.UNAUTHORIZED);
+        const foundPermission = await this.projectPermissionService.findByPidAndUid(id, user.userId);
+        if (foundPermission.type !== 'admin') throw new HttpException('没有删除权限', HttpStatus.UNAUTHORIZED);
 
         try {
             this.projectRepository.remove(project);
@@ -209,7 +235,9 @@ export class ProjectService {
         if (!foundUser) throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
         if (!['admin', 'r', 'rw'].includes(type)) throw new HttpException('权限类型错误', HttpStatus.BAD_REQUEST);
         if (!project) throw new HttpException('项目不存在', HttpStatus.BAD_REQUEST);
-        if (project.creatorId !== user.userId) throw new HttpException('没有分配权限', HttpStatus.UNAUTHORIZED);
+        // 查询用户是否有分配权限
+        const userPermission = await this.projectPermissionService.findByPidAndUid(pid, user.userId);
+        if (userPermission.type !== 'admin') throw new HttpException('没有分配权限', HttpStatus.UNAUTHORIZED);
 
         if (project.creatorId == uid) throw new HttpException('不能分配给自己', HttpStatus.BAD_REQUEST);
         // 查询是否已经分配过权限

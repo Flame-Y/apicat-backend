@@ -23,11 +23,28 @@ export class ProjectController {
         description: '创建成功/失败',
         type: String
     })
-    @Post('create')
+    @Post('createPersonalProject')
     @RequireLogin()
     @ApiBearerAuth()
-    create(@Body() createProjectDto: CreateProjectDto, @Req() req: any) {
-        return this.projectService.create(createProjectDto, req.user as JwtUserData);
+    createPersonalProject(@Body() createProjectDto: CreateProjectDto, @Req() req: any) {
+        return this.projectService.createPersonalProject(createProjectDto, req.user as JwtUserData);
+    }
+
+    @ApiResponse({
+        status: HttpStatus.BAD_REQUEST,
+        description: '项目已存在',
+        type: String
+    })
+    @ApiResponse({
+        status: HttpStatus.CREATED,
+        description: '创建成功/失败',
+        type: String
+    })
+    @Post('createTeamProject/:tid')
+    @RequireLogin()
+    @ApiBearerAuth()
+    createTeamProject(@Body() createProjectDto: CreateProjectDto, @Req() req: any, @Param('tid') tid: string) {
+        return this.projectService.createTeamProject(createProjectDto, req.user as JwtUserData, +tid);
     }
 
     //大概是一个不会用到的接口
@@ -147,4 +164,6 @@ export class ProjectController {
             req.user as JwtUserData
         );
     }
+
+    //todo: 更新项目信息
 }

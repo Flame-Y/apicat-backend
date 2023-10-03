@@ -6,9 +6,16 @@ import { Project } from './entities/project.entity';
 import { ProjectPermissionModule } from 'src/project-permission/project-permission.module';
 import { UserModule } from 'src/user/user.module';
 import { ApiModule } from 'src/api/api.module';
+import { TeamModule } from 'src/team/team.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Project]), ProjectPermissionModule, UserModule, forwardRef(() => ApiModule)],
+    imports: [
+        TypeOrmModule.forFeature([Project]),
+        ProjectPermissionModule,
+        UserModule,
+        forwardRef(() => ApiModule),
+        forwardRef(() => TeamModule)
+    ],
     controllers: [ProjectController],
     providers: [ProjectService],
     exports: [ProjectService]
