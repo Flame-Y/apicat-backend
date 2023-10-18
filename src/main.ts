@@ -4,10 +4,14 @@ import { AppModule } from './app.module';
 import { DocumentBuilder } from '@nestjs/swagger';
 import { SwaggerModule } from '@nestjs/swagger';
 import { FormatResponseInterceptor } from './format-response.interceptor';
+import { HttpExceptionFilter } from './format-exception.filter';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
+    app.enableCors();
     app.useGlobalInterceptors(new FormatResponseInterceptor());
+    app.useGlobalFilters(new HttpExceptionFilter());
+
     const configService = app.get(ConfigService);
     const config = new DocumentBuilder()
         .setTitle('API Cat')
