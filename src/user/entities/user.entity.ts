@@ -15,6 +15,13 @@ export class User {
 
     @Column({
         length: 100,
+        comment: '邮箱',
+        nullable: true
+    })
+    email: string;
+
+    @Column({
+        length: 100,
         comment: '密码'
     })
     password: string;
@@ -25,6 +32,13 @@ export class User {
         nullable: true
     })
     avatar: string;
+
+    @Column({
+        length: 1000,
+        comment: 'Github Id',
+        nullable: true
+    })
+    githubId: string;
 
     @CreateDateColumn({
         comment: '创建时间'

@@ -32,7 +32,6 @@ export class UserController {
     })
     @Post('register')
     async register(@Body(ValidationPipe) user: RegisterDto) {
-        console.log(user);
         return await this.userService.register(user);
     }
 
@@ -55,6 +54,7 @@ export class UserController {
         vo.accessToken = this.jwtService.sign(
             {
                 userId: vo.userInfo.id,
+                email: vo.userInfo.email,
                 username: vo.userInfo.username,
                 project: vo.userInfo.project
             },
@@ -63,6 +63,35 @@ export class UserController {
             }
         );
         return vo;
+    }
+
+    @Post('checkGithub')
+    async checkGithub(@Body() body) {
+        return await this.userService.checkGithub(body.githubId);
+    }
+
+    @Post('loginByGithub')
+    async loginByGithub(@Body() body) {
+        const vo = await this.userService.loginByGithub(body.githubId);
+        vo.accessToken = this.jwtService.sign(
+            {
+                userId: vo.userInfo.id,
+                email: vo.userInfo.email,
+                username: vo.userInfo.username,
+                project: vo.userInfo.project
+            },
+            {
+                expiresIn: this.configService.get('jwt_access_token_expires_time') || '3d'
+            }
+        );
+        return vo;
+    }
+
+    @Post('registerByGithub')
+    async registerByGithub(@Body(ValidationPipe) user: RegisterDto) {
+        console.log(user);
+
+        return await this.userService.registerByGithub(user);
     }
 
     @ApiBearerAuth()

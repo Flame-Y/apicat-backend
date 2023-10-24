@@ -24,7 +24,7 @@ export class UserService {
 
     async login(user: LoginDto) {
         const foundUser: User = await this.userRepository.findOneBy({
-            username: user.username
+            email: user.email
         });
 
         if (!foundUser) {
@@ -37,12 +37,71 @@ export class UserService {
 
         vo.userInfo = {
             id: foundUser.id,
+            email: foundUser.email,
+            username: foundUser.username,
+            project: [] // todo：获取用户项目
+            //需要在这里返回这些信息吗？？
+        };
+
+        return vo;
+    }
+
+    async checkGithub(githubId: string): Promise<boolean> {
+        const foundUser: User = await this.userRepository.findOneBy({
+            githubId
+        });
+
+        return foundUser ? true : false;
+    }
+
+    async loginByGithub(githubId: string) {
+        const foundUser: User = await this.userRepository.findOneBy({
+            githubId
+        });
+
+        if (!foundUser) {
+            throw new HttpException('用户不存在', HttpStatus.BAD_REQUEST);
+        }
+
+        const vo = new LoginUserVo();
+
+        vo.userInfo = {
+            id: foundUser.id,
+            email: foundUser.email,
             username: foundUser.username,
             project: [] // todo：获取用户项目
         };
 
         return vo;
     }
+
+    async registerByGithub(user: RegisterDto) {
+        console.log(user);
+
+        const foundUser = await this.userRepository.findOneBy({
+            email: user.email
+        });
+
+        if (foundUser) {
+            //TODO: 判断邮箱是否已经注册
+        }
+
+        const newUser = new User();
+        newUser.email = user.email;
+        newUser.username = user.username;
+        newUser.password = user.password;
+        newUser.githubId = user.githubId;
+        newUser.avatar = user.avatar;
+
+        try {
+            await this.userRepository.save(newUser);
+            return '注册成功';
+        } catch (e) {
+            this.logger.error(e, UserService);
+            return '注册失败';
+        }
+    }
+
     async getNameById(userId: number) {
         const foundUser = await this.userRepository.findOneBy({
             id: userId
@@ -52,7 +111,7 @@ export class UserService {
 
     async register(user: RegisterDto) {
         const foundUser = await this.userRepository.findOneBy({
-            username: user.username
+            email: user.email
         });
 
         if (foundUser) {
@@ -60,6 +119,7 @@ export class UserService {
         }
 
         const newUser = new User();
+        newUser.email = user.email;
         newUser.username = user.username;
         newUser.password = md5(user.password);
 
