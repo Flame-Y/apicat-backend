@@ -45,7 +45,7 @@ class Api {
     name: string;
 
     @ApiProperty()
-    type: string;
+    method: string;
 
     @ApiProperty()
     url: string;

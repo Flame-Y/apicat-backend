@@ -43,6 +43,7 @@ export class ProjectService {
             //在project-permission表中添加记录
             const projectPermission = new ProjectPermission();
             projectPermission.pid = newProject.id;
+            projectPermission.tid = -1;
             projectPermission.uid = user.userId;
             projectPermission.username = user.username;
             projectPermission.type = 'admin';
@@ -94,10 +95,9 @@ export class ProjectService {
             });
             // 将Project[]转换为ProjectListVo[]并加入权限信息与接口数量
             const projectListVo: ProjectListVo[] = projectList.map((e) => {
-                // 去除creatorId、creatorName、description
+                // 去除creatorId、creatorName
                 delete e.creatorId;
                 delete e.creatorName;
-                delete e.description;
                 const vo = plainToClass(ProjectListVo, e);
                 const perm = permList.find((p) => p.pid === e.id);
                 vo.permission = perm.type;
@@ -178,7 +178,7 @@ export class ProjectService {
             const projectInfoVo = new ProjectInfoVo();
             projectInfoVo.projectInfo = plainToClass(Project, project);
             projectInfoVo.permissionList = permList;
-            projectInfoVo.apiList = apiList.records;
+            // projectInfoVo.apiList = apiList.records;
             return projectInfoVo;
         } catch (e) {
             this.logger.error(e);

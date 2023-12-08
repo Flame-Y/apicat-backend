@@ -12,12 +12,15 @@ export class UpdateApiDto {
 
     @IsString()
     @ApiProperty()
-    type: string;
+    method: string;
 
     @IsString()
     @ApiProperty()
     url: string;
 
     @ApiProperty()
-    pid: number;
+    parentId: string;
+
+    @ApiProperty()
+    orderNum: number;
 }

@@ -14,7 +14,7 @@ export class CreateApiDto {
     @IsString()
     @IsNotEmpty({ message: '请求方式不能为空' })
     @ApiProperty()
-    type: string;
+    method: string;
 
     @IsString()
     @IsNotEmpty({ message: '接口地址不能为空' })
@@ -24,4 +24,10 @@ export class CreateApiDto {
     @IsNotEmpty({ message: '项目id不能为空' })
     @ApiProperty()
     pid: number;
+
+    @ApiProperty()
+    parentId: string;
+
+    @ApiProperty()
+    orderNum: number;
 }

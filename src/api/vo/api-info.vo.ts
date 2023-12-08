@@ -11,7 +11,7 @@ class ApiInfo {
     description: string;
 
     @ApiProperty()
-    type: string;
+    method: string;
 
     @ApiProperty()
     url: string;

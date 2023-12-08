@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { JwtModule } from '@nestjs/jwt';
@@ -15,6 +16,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { LoginGuard } from './login.guard';
 import { ApiModule } from './api/api.module';
 import { Api } from './api/entities/api.entity';
+import { ApiSchema } from './api/api.schema';
 import { ApiArgsModule } from './api-args/api-args.module';
 import { ApiResponseModule } from './api-response/api-response.module';
 import { ApiArg } from './api-args/entities/api-arg.entity';
@@ -36,7 +38,7 @@ import { TeamPermission } from './team-permission/entities/team-permission.entit
                 database: ConfigService.get('mysql_server_database'), //数据库名字配置
                 synchronize: true,
                 logging: true,
-                entities: [User, Project, ProjectPermission, Api, ApiArg, ApiResponse, Team, TeamPermission],
+                entities: [User, Project, ProjectPermission, Team, TeamPermission],
                 poolSize: 10,
                 connectorPackage: 'mysql2',
                 extra: {
@@ -45,6 +47,29 @@ import { TeamPermission } from './team-permission/entities/team-permission.entit
             }),
             inject: [ConfigService]
         }),
+        // TypeOrmModule.forRootAsync({
+        //     useFactory: (ConfigService: ConfigService) => ({
+        //         type: 'mongodb',
+        //         host: ConfigService.get('mongodb_server_host'),
+        //         port: ConfigService.get('mongodb_server_port'),
+        //         database: ConfigService.get('mongodb_server_database'),
+
+        //         entities: [ApiArg, ApiResponse, Api],
+        //         synchronize: true
+        //     }),
+        //     inject: [ConfigService]
+        // }),
+        // MongooseModule.forRoot('mongodb://127.0.0.1:27017', { dbName: 'apicat' }),
+
+        MongooseModule.forRootAsync({
+            useFactory: (ConfigService: ConfigService) => ({
+                uri: `mongodb://${ConfigService.get('mongodb_server_host')}:${ConfigService.get(
+                    'mongodb_server_port'
+                )}/${ConfigService.get('mongodb_server_database')}`
+            }),
+            inject: [ConfigService]
+        }),
+        // MongooseModule.forFeature([{ name: Api.name, schema: ApiSchema }]),
         JwtModule.register({
             global: true,
             secret: '114514', // 秘钥
@@ -52,8 +77,8 @@ import { TeamPermission } from './team-permission/entities/team-permission.entit
                 expiresIn: '7d' // token 过期时间
             }
         }),
-        UserModule,
         ConfigModule.forRoot({ isGlobal: true, envFilePath: 'src/.env' }),
+        UserModule,
         ProjectModule,
         ProjectPermissionModule,
         ApiModule,
